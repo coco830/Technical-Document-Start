@@ -1,0 +1,118 @@
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  reactStrictMode: true,
+  swcMinify: true,
+  reactRefresh: false,
+  experimental: {
+    optimizeCss: true,
+    optimizePackageImports: [
+      'lucide-react',
+      'date-fns',
+      'lodash',
+      'axios',
+      'react-hook-form',
+      'zustand'
+    ]
+  },
+  // 启用压缩
+  compress: true,
+  // 启用图片优化
+  images: {
+    domains: ['localhost', 'your-domain.com'],
+    formats: ['image/webp', 'image/avif'],
+    minimumCacheTTL: 60 * 60 * 24 * 30, // 30天
+  },
+  // PWA 配置已移除，因为当前 Next.js 版本不支持此配置
+  // 如需 PWA 功能，请安装 next-pwa 插件
+  // 启用增量构建和优化
+  webpack: (config, { dev, isServer }) => {
+    if (!isServer) {
+      config.optimization.splitChunks = {
+        chunks: 'all',
+        cacheGroups: {
+          default: {
+            minChunks: 2,
+            priority: -20,
+            reuseExistingChunk: true,
+          },
+          vendor: {
+            test: /[\\/]node_modules[\\/]/,
+            name(module) {
+              const match = module.context.match(/[\\/]node_modules[\\/](.*?)([\\/]|$)/);
+              if (match && match[1]) {
+                return `npm.${match[1].replace('@', '')}`;
+              }
+              return 'npm.unknown';
+            },
+            priority: -10,
+            reuseExistingChunk: true,
+          },
+          ui: {
+            test: /[\\/]src[\\/]components[\\/]/,
+            name: 'ui',
+            priority: 10,
+            reuseExistingChunk: true,
+          },
+          pages: {
+            test: /[\\/]src[\\/]app[\\/]/,
+            name: 'pages',
+            priority: 20,
+            reuseExistingChunk: true,
+          },
+        },
+      };
+    }
+
+    if (!dev && !isServer) {
+      config.optimization.minimize = true;
+      config.optimization.usedExports = true;
+      config.optimization.sideEffects = true;
+    }
+
+    return config;
+  },
+  // 启用缓存
+  async headers() {
+    return [
+      {
+        source: '/_next/static/(.*)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      {
+        source: '/images/(.*)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=86400, immutable',
+          },
+        ],
+      },
+      {
+        source: '/api/(.*)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-store, must-revalidate',
+          },
+        ],
+      },
+    ];
+  },
+  // 启用重定向
+  async redirects() {
+    return [
+      {
+        source: '/home',
+        destination: '/',
+        permanent: true,
+      },
+    ];
+  },
+}
+
+module.exports = nextConfig

@@ -1,0 +1,238 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { Button } from '@/components/ui/button'
+import { DocumentCard } from '@/components/documents/document-card'
+import { DocumentFilters } from '@/components/documents/document-filters'
+import { DocumentWithDetails, DocumentSearch, DocumentStatus, DocumentFormat } from '@/types'
+import { documentApi } from '@/lib/api'
+import { Plus, Search, Filter } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+
+export default function DocumentsPage() {
+  const router = useRouter()
+  const [documents, setDocuments] = useState<DocumentWithDetails[]>([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(0)
+  const [total, setTotal] = useState(0)
+  const [pageSize] = useState(12)
+  const [filters, setFilters] = useState<DocumentSearch>({})
+  const [showFilters, setShowFilters] = useState(false)
+
+  useEffect(() => {
+    fetchDocuments()
+  }, [currentPage, filters])
+
+  const fetchDocuments = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      
+      const params = {
+        skip: (currentPage - 1) * pageSize,
+        limit: pageSize,
+        ...filters
+      }
+      
+      const response = await documentApi.getDocuments(params)
+      
+      if (response.success && response.data) {
+        setDocuments(response.data.documents)
+        setTotal(response.data.total)
+        setTotalPages(Math.ceil(response.data.total / pageSize))
+      }
+    } catch (err) {
+      console.error('获取文档列表失败:', err)
+      setError('获取文档列表失败，请稍后重试')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleSearch = () => {
+    setCurrentPage(1)
+    fetchDocuments()
+  }
+
+  const handleFiltersChange = (newFilters: DocumentSearch) => {
+    setFilters(newFilters)
+  }
+
+  const handleReset = () => {
+    setFilters({})
+    setCurrentPage(1)
+  }
+
+  const handleView = (id: number) => {
+    router.push(`/documents/${id}`)
+  }
+
+  const handleEdit = (id: number) => {
+    router.push(`/documents/${id}/edit`)
+  }
+
+  const handleDelete = async (id: number) => {
+    if (window.confirm('确定要删除这个文档吗？此操作不可撤销。')) {
+      try {
+        await documentApi.deleteDocument(id)
+        fetchDocuments()
+      } catch (err) {
+        console.error('删除文档失败:', err)
+        alert('删除文档失败，请稍后重试')
+      }
+    }
+  }
+
+  const handleExport = async (id: number, format: 'pdf' | 'docx' | 'html' | 'markdown') => {
+    try {
+      await documentApi.exportDocument(id, format)
+    } catch (err) {
+      console.error('导出文档失败:', err)
+      alert('导出文档失败，请稍后重试')
+    }
+  }
+
+  const handleVersionHistory = (id: number) => {
+    router.push(`/documents/${id}/versions`)
+  }
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
+  }
+
+  const handleCreateDocument = () => {
+    router.push('/documents/new')
+  }
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">文档管理</h1>
+        <p className="text-gray-600">管理和编辑您的文档内容</p>
+      </div>
+
+      {/* 操作栏 */}
+      <div className="flex flex-col sm:flex-row gap-4 mb-6">
+        <Button
+          onClick={handleCreateDocument}
+          className="flex items-center gap-2"
+        >
+          <Plus className="h-4 w-4" />
+          创建文档
+        </Button>
+        
+        <Button
+          variant="outline"
+          onClick={() => setShowFilters(!showFilters)}
+          className="flex items-center gap-2"
+        >
+          <Filter className="h-4 w-4" />
+          {showFilters ? '隐藏筛选' : '显示筛选'}
+        </Button>
+        
+        <div className="flex-1 text-right text-sm text-gray-500">
+          共 {total} 个文档
+        </div>
+      </div>
+
+      {/* 筛选器 */}
+      {showFilters && (
+        <div className="mb-6">
+          <DocumentFilters
+            filters={filters}
+            onFiltersChange={handleFiltersChange}
+            onSearch={handleSearch}
+            onReset={handleReset}
+          />
+        </div>
+      )}
+
+      {/* 错误提示 */}
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+          {error}
+        </div>
+      )}
+
+      {/* 文档列表 */}
+      {loading ? (
+        <div className="flex justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        </div>
+      ) : documents.length === 0 ? (
+        <div className="text-center py-12">
+          <div className="text-gray-400 mb-4">
+            <Search className="h-16 w-16 mx-auto" />
+          </div>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">暂无文档</h3>
+          <p className="text-gray-500 mb-4">
+            {Object.keys(filters).length > 0 
+              ? '没有符合筛选条件的文档，请尝试调整筛选条件'
+              : '还没有创建任何文档，点击上方按钮创建第一个文档'
+            }
+          </p>
+          {Object.keys(filters).length === 0 && (
+            <Button onClick={handleCreateDocument}>
+              <Plus className="h-4 w-4 mr-2" />
+              创建文档
+            </Button>
+          )}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          {documents.map((document) => (
+            <DocumentCard
+              key={document.id}
+              document={document}
+              onView={handleView}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+              onExport={handleExport}
+              onVersionHistory={handleVersionHistory}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* 分页 */}
+      {totalPages > 1 && (
+        <div className="flex justify-center">
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+            >
+              上一页
+            </Button>
+            
+            <div className="flex items-center gap-1">
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <Button
+                  key={page}
+                  variant={currentPage === page ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => handlePageChange(page)}
+                >
+                  {page}
+                </Button>
+              ))}
+            </div>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+            >
+              下一页
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}

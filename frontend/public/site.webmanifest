@@ -1,0 +1,10 @@
+﻿{
+  "name": "Yueen Platform",
+  "short_name": "Yueen",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1f2937",
+  "description": "悦恩人机共写平台前端应用",
+  "icons": []
+}

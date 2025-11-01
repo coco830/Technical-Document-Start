@@ -1,0 +1,256 @@
+'use client'
+
+import React, { useState, useEffect } from 'react'
+import { Button } from '@/components/ui/button'
+import { CompanyCard } from '@/components/companies/company-card'
+import { CompanyFilters, CompanyQuickFilters } from '@/components/companies/company-filters'
+import { CompanyWithDetails, CompanyList, CompanySearch } from '@/types'
+import { companyApi } from '@/lib/api'
+import { useRouter } from 'next/navigation'
+import { formatDistanceToNow } from '@/utils'
+
+export default function CompaniesPage() {
+  const router = useRouter()
+  const [companies, setCompanies] = useState<CompanyWithDetails[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [pagination, setPagination] = useState({
+    page: 1,
+    size: 12,
+    total: 0,
+    pages: 0,
+  })
+  const [filters, setFilters] = useState<CompanySearch>({})
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
+
+  // 获取企业列表
+  const fetchCompanies = async (page = 1, searchFilters?: CompanySearch) => {
+    try {
+      setLoading(true)
+      setError(null)
+      
+      const response = await companyApi.getCompanies({
+        skip: (page - 1) * pagination.size,
+        limit: pagination.size,
+        ...searchFilters,
+        order_by: 'created_at',
+        order_desc: true,
+      })
+      
+      if (response.success && response.data) {
+        setCompanies(response.data.companies)
+        setPagination(prev => ({
+          ...prev,
+          page: response.data.page,
+          total: response.data.total,
+          pages: Math.ceil(response.data.total / response.data.size),
+        }))
+      } else {
+        setError(response.message || '获取企业列表失败')
+      }
+    } catch (err) {
+      setError('获取企业列表失败')
+      console.error('获取企业列表失败:', err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // 初始加载
+  useEffect(() => {
+    fetchCompanies(1, filters)
+  }, [])
+
+  // 处理筛选条件变化
+  const handleFiltersChange = (newFilters: CompanySearch) => {
+    setFilters(newFilters)
+    fetchCompanies(1, newFilters)
+  }
+
+  // 处理重置筛选
+  const handleResetFilters = () => {
+    const emptyFilters = {}
+    setFilters(emptyFilters)
+    fetchCompanies(1, emptyFilters)
+  }
+
+  // 处理分页
+  const handlePageChange = (page: number) => {
+    fetchCompanies(page, filters)
+  }
+
+  // 处理查看企业详情
+  const handleViewCompany = (id: number) => {
+    router.push(`/companies/${id}`)
+  }
+
+  // 处理编辑企业
+  const handleEditCompany = (id: number) => {
+    router.push(`/companies/${id}/edit`)
+  }
+
+  // 处理删除企业
+  const handleDeleteCompany = async (id: number) => {
+    if (window.confirm('确定要删除这个企业吗？此操作不可撤销。')) {
+      try {
+        const response = await companyApi.deleteCompany(id)
+        if (response.success) {
+          // 重新获取企业列表
+          fetchCompanies(pagination.page, filters)
+        } else {
+          alert(response.message || '删除企业失败')
+        }
+      } catch (err) {
+        alert('删除企业失败')
+        console.error('删除企业失败:', err)
+      }
+    }
+  }
+
+  // 处理创建新企业
+  const handleCreateCompany = () => {
+    router.push('/companies/new')
+  }
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">企业管理</h1>
+          <p className="text-gray-600 mt-1">管理和查看所有企业信息</p>
+        </div>
+        <Button onClick={handleCreateCompany} className="mt-4 md:mt-0">
+          创建新企业
+        </Button>
+      </div>
+
+      {/* 快速筛选 */}
+      <div className="mb-6">
+        <CompanyQuickFilters
+          onFiltersChange={(quickFilters) => {
+            const newFilters = { ...filters, ...quickFilters }
+            handleFiltersChange(newFilters)
+          }}
+        />
+      </div>
+
+      {/* 高级筛选切换按钮 */}
+      <div className="mb-4">
+        <Button
+          variant="outline"
+          onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+        >
+          {showAdvancedFilters ? '隐藏高级筛选' : '显示高级筛选'}
+        </Button>
+      </div>
+
+      {/* 高级筛选 */}
+      {showAdvancedFilters && (
+        <div className="mb-6">
+          <CompanyFilters
+            onFiltersChange={handleFiltersChange}
+            onReset={handleResetFilters}
+          />
+        </div>
+      )}
+
+      {/* 统计信息 */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div className="bg-white p-4 rounded-lg shadow">
+          <div className="text-2xl font-bold text-blue-600">{pagination.total}</div>
+          <div className="text-sm text-gray-600">总企业数</div>
+        </div>
+        <div className="bg-white p-4 rounded-lg shadow">
+          <div className="text-2xl font-bold text-green-600">
+            {companies.filter(c => c.active_projects_count && c.active_projects_count > 0).length}
+          </div>
+          <div className="text-sm text-gray-600">活跃企业</div>
+        </div>
+        <div className="bg-white p-4 rounded-lg shadow">
+          <div className="text-2xl font-bold text-yellow-600">
+            {companies.reduce((sum, c) => sum + (c.projects_count || 0), 0)}
+          </div>
+          <div className="text-sm text-gray-600">总项目数</div>
+        </div>
+        <div className="bg-white p-4 rounded-lg shadow">
+          <div className="text-2xl font-bold text-purple-600">
+            {companies.reduce((sum, c) => sum + (c.documents_count || 0), 0)}
+          </div>
+          <div className="text-sm text-gray-600">总文档数</div>
+        </div>
+      </div>
+
+      {/* 错误提示 */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6">
+          {error}
+        </div>
+      )}
+
+      {/* 加载状态 */}
+      {loading ? (
+        <div className="flex justify-center items-center py-12">
+          <div className="text-lg text-gray-600">加载中...</div>
+        </div>
+      ) : (
+        <>
+          {/* 企业列表 */}
+          {companies.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="text-gray-500 text-lg mb-4">暂无企业数据</div>
+              <Button onClick={handleCreateCompany}>
+                创建第一个企业
+              </Button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+              {companies.map((company) => (
+                <CompanyCard
+                  key={company.id}
+                  company={company}
+                  onView={handleViewCompany}
+                  onEdit={handleEditCompany}
+                  onDelete={handleDeleteCompany}
+                />
+              ))}
+            </div>
+          )}
+
+          {/* 分页 */}
+          {pagination.pages > 1 && (
+            <div className="flex justify-center items-center space-x-2">
+              <Button
+                variant="outline"
+                onClick={() => handlePageChange(pagination.page - 1)}
+                disabled={pagination.page <= 1}
+              >
+                上一页
+              </Button>
+              
+              <div className="flex items-center space-x-1">
+                {Array.from({ length: pagination.pages }, (_, i) => i + 1).map((page) => (
+                  <Button
+                    key={page}
+                    variant={page === pagination.page ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => handlePageChange(page)}
+                  >
+                    {page}
+                  </Button>
+                ))}
+              </div>
+              
+              <Button
+                variant="outline"
+                onClick={() => handlePageChange(pagination.page + 1)}
+                disabled={pagination.page >= pagination.pages}
+              >
+                下一页
+              </Button>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  )
+}

@@ -1,0 +1,759 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom CSS Variables for theming */
+:root {
+  --background: 0 0% 100%;
+  --foreground: 222.2 84% 4.9%;
+  --card: 0 0% 100%;
+  --card-foreground: 222.2 84% 4.9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222.2 84% 4.9%;
+  --primary: 221.2 83.2% 53.3%;
+  --primary-foreground: 210 40% 98%;
+  --secondary: 210 40% 96%;
+  --secondary-foreground: 222.2 84% 4.9%;
+  --muted: 210 40% 96%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+  --accent: 210 40% 96%;
+  --accent-foreground: 222.2 84% 4.9%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 91.4%;
+  --ring: 221.2 83.2% 53.3%;
+  --radius: 0.5rem;
+  --font-family: Inter, system-ui, sans-serif;
+}
+
+.dark {
+  --background: 222.2 84% 4.9%;
+  --foreground: 210 40% 98%;
+  --card: 222.2 84% 4.9%;
+  --card-foreground: 210 40% 98%;
+  --popover: 222.2 84% 4.9%;
+  --popover-foreground: 210 40% 98%;
+  --primary: 217.2 91.2% 59.8%;
+  --primary-foreground: 222.2 84% 4.9%;
+  --secondary: 217.2 32.6% 17.5%;
+  --secondary-foreground: 210 40% 98%;
+  --muted: 217.2 32.6% 17.5%;
+  --muted-foreground: 215 20.2% 65.1%;
+  --accent: 217.2 32.6% 17.5%;
+  --accent-foreground: 210 40% 98%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 217.2 32.6% 17.5%;
+  --input: 217.2 32.6% 17.5%;
+  --ring: 224.3 76.3% 94.1%;
+}
+
+.blue {
+  --background: 0 0% 100%;
+  --foreground: 222.2 84% 4.9%;
+  --card: 0 0% 100%;
+  --card-foreground: 222.2 84% 4.9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222.2 84% 4.9%;
+  --primary: 210 100% 50%;
+  --primary-foreground: 0 0% 98%;
+  --secondary: 210 40% 96%;
+  --secondary-foreground: 222.2 84% 4.9%;
+  --muted: 210 40% 96%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+  --accent: 210 40% 96%;
+  --accent-foreground: 222.2 84% 4.9%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 91.4%;
+  --ring: 210 100% 50%;
+}
+
+.green {
+  --background: 0 0% 100%;
+  --foreground: 222.2 84% 4.9%;
+  --card: 0 0% 100%;
+  --card-foreground: 222.2 84% 4.9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222.2 84% 4.9%;
+  --primary: 142 76% 36%;
+  --primary-foreground: 0 0% 98%;
+  --secondary: 210 40% 96%;
+  --secondary-foreground: 222.2 84% 4.9%;
+  --muted: 210 40% 96%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+  --accent: 210 40% 96%;
+  --accent-foreground: 222.2 84% 4.9%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 91.4%;
+  --ring: 142 76% 36%;
+}
+
+/* Base styles */
+* {
+  @apply border-border;
+}
+
+body {
+  @apply bg-background text-foreground;
+  font-feature-settings: "rlig" 1, "calt" 1;
+}
+
+/* Scrollbar styles */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-muted;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-muted-foreground/30 rounded-md;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-muted-foreground/50;
+}
+
+/* Animation system */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes slideInFromTop {
+  from {
+    transform: translateY(-100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInFromBottom {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInFromLeft {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInFromRight {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideOutToTop {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-100%);
+  }
+}
+
+@keyframes slideOutToBottom {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes slideOutToLeft {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-100%);
+  }
+}
+
+@keyframes slideOutToRight {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes scaleOut {
+  from {
+    transform: scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(-25%);
+    animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+  }
+  50% {
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+@keyframes loading-bar {
+  0% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Animation utilities */
+.animate-fade-in {
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+.animate-fade-out {
+  animation: fadeOut 0.2s ease-in-out;
+}
+
+.animate-slide-in-from-top {
+  animation: slideInFromTop 0.3s ease-out;
+}
+
+.animate-slide-in-from-bottom {
+  animation: slideInFromBottom 0.3s ease-out;
+}
+
+.animate-slide-in-from-left {
+  animation: slideInFromLeft 0.3s ease-out;
+}
+
+.animate-slide-in-from-right {
+  animation: slideInFromRight 0.3s ease-out;
+}
+
+.animate-slide-out-to-top {
+  animation: slideOutToTop 0.3s ease-in;
+}
+
+.animate-slide-out-to-bottom {
+  animation: slideOutToBottom 0.3s ease-in;
+}
+
+.animate-slide-out-to-left {
+  animation: slideOutToLeft 0.3s ease-in;
+}
+
+.animate-slide-out-to-right {
+  animation: slideOutToRight 0.3s ease-in;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.2s ease-out;
+}
+
+.animate-scale-out {
+  animation: scaleOut 0.2s ease-in;
+}
+
+.animate-bounce {
+  animation: bounce 1s infinite;
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+.animate-shimmer {
+  animation: shimmer 1.5s infinite;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
+  background-size: 1000px 100%;
+}
+
+/* Responsive design utilities */
+@media (max-width: 640px) {
+  .container {
+    @apply px-4;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 768px) {
+  .container {
+    @apply px-6;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .container {
+    @apply px-8;
+  }
+}
+
+@media (min-width: 1025px) {
+  .container {
+    @apply px-12;
+  }
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  .print-break-before {
+    page-break-before: always;
+  }
+  
+  .print-break-after {
+    page-break-after: always;
+  }
+  
+  .print-break-inside-avoid {
+    page-break-inside: avoid;
+  }
+  
+  body {
+    @apply text-black bg-white;
+  }
+  
+  a {
+    color: #000 !important;
+    text-decoration: underline !important;
+  }
+  
+  .text-muted-foreground {
+    color: #000 !important;
+  }
+  
+  .bg-muted {
+    background-color: #f5f5f5 !important;
+  }
+  
+  .border-border {
+    border-color: #ddd !important;
+  }
+  
+  /* Ensure all colors are black or white for printing */
+  * {
+    color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}
+
+/* Focus styles for accessibility */
+.focus-visible {
+  @apply outline-2 outline-ring-2 outline-offset-2;
+}
+
+/* Skip to content link for accessibility */
+.skip-to-content {
+  @apply absolute top-0 left-0 z-50 p-4 bg-primary text-primary-foreground rounded-md -translate-y-full focus:translate-y-0 transition-transform;
+}
+
+/* High contrast mode for accessibility */
+@media (prefers-contrast: high) {
+  :root {
+    --border: 0 0% 0%;
+    --input: 0 0% 0%;
+  }
+  
+  .border-border {
+    @apply border-black dark:border-white;
+  }
+}
+
+/* Reduced motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Custom component styles */
+.form-input-error {
+  @apply border-destructive focus:border-destructive focus:ring-destructive;
+}
+
+.table-row-selected {
+  @apply bg-muted/50;
+}
+
+.table-row-hover {
+  @apply hover:bg-muted/20;
+}
+
+.dropdown-item-active {
+  @apply bg-accent text-accent-foreground;
+}
+
+.modal-overlay {
+  @apply fixed inset-0 z-50 bg-black/50 backdrop-blur-sm;
+}
+
+.sidebar-collapsed {
+  @apply w-16;
+}
+
+.sidebar-expanded {
+  @apply w-64;
+}
+
+/* Loading skeleton animation */
+.skeleton {
+  @apply animate-pulse rounded-md bg-muted;
+}
+
+.skeleton-text {
+  @apply h-4 w-full rounded;
+}
+
+.skeleton-avatar {
+  @apply h-10 w-10 rounded-full;
+}
+
+.skeleton-button {
+  @apply h-10 w-20 rounded;
+}
+
+/* Custom scrollbar for specific components */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  @apply bg-muted-foreground/20 rounded-full;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  @apply bg-muted-foreground/30;
+}
+
+/* Text selection styles */
+::selection {
+  @apply bg-primary/20 text-primary-foreground;
+}
+
+::-moz-selection {
+  @apply bg-primary/20 text-primary-foreground;
+}
+
+/* Placeholder styles */
+::placeholder {
+  @apply text-muted-foreground;
+}
+
+::-webkit-input-placeholder {
+  @apply text-muted-foreground;
+}
+
+::-moz-placeholder {
+  @apply text-muted-foreground;
+}
+
+:-ms-input-placeholder {
+  @apply text-muted-foreground;
+}
+
+/* File upload area styles */
+.file-upload-area {
+  @apply border-2 border-dashed border-muted-foreground/30 rounded-lg p-8 text-center transition-colors hover:border-primary/50 hover:bg-accent/50;
+}
+
+.file-upload-area.drag-over {
+  @apply border-primary bg-primary/5;
+}
+
+.file-upload-area.error {
+  @apply border-destructive bg-destructive/5;
+}
+
+/* Code block styles */
+pre {
+  @apply bg-muted p-4 rounded-md overflow-auto text-sm;
+}
+
+code {
+  @apply bg-muted px-1 py-0.5 rounded text-sm font-mono;
+}
+
+pre code {
+  @apply bg-transparent p-0;
+}
+
+/* Blockquote styles */
+blockquote {
+  @apply border-l-4 border-muted-foreground/30 pl-4 italic;
+}
+
+/* Table styles */
+.table-container {
+  @apply overflow-auto rounded-lg border;
+}
+
+.table-sticky-header {
+  @apply sticky top-0 z-10 bg-background;
+}
+
+/* Link styles */
+.link {
+  @apply text-primary hover:underline;
+}
+
+.link-external {
+  @apply text-primary hover:underline after:content-['_'] after:ml-1 after:no-underline;
+}
+
+/* Image styles */
+.img-responsive {
+  @apply max-w-full h-auto;
+}
+
+.img-rounded {
+  @apply rounded-lg;
+}
+
+.img-circle {
+  @apply rounded-full;
+}
+
+/* Video styles */
+.video-responsive {
+  @apply relative w-full pb-[56.25%]; /* 16:9 Aspect Ratio */
+}
+
+.video-responsive video {
+  @apply absolute top-0 left-0 h-full w-full;
+}
+
+/* Badge styles */
+.badge {
+  @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
+}
+
+.badge-primary {
+  @apply bg-primary text-primary-foreground;
+}
+
+.badge-secondary {
+  @apply bg-secondary text-secondary-foreground;
+}
+
+.badge-success {
+  @apply bg-green-600 text-white;
+}
+
+.badge-warning {
+  @apply bg-yellow-600 text-white;
+}
+
+.badge-error {
+  @apply bg-destructive text-destructive-foreground;
+}
+
+/* Alert styles */
+.alert {
+  @apply p-4 rounded-lg;
+}
+
+.alert-info {
+  @apply bg-blue-50 text-blue-800 border-blue-200 dark:bg-blue-900/20 dark:text-blue-200 dark:border-blue-800;
+}
+
+.alert-success {
+  @apply bg-green-50 text-green-800 border-green-200 dark:bg-green-900/20 dark:text-green-200 dark:border-green-800;
+}
+
+.alert-warning {
+  @apply bg-yellow-50 text-yellow-800 border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-200 dark:border-yellow-800;
+}
+
+.alert-error {
+  @apply bg-red-50 text-red-800 border-red-200 dark:bg-red-900/20 dark:text-red-200 dark:border-red-800;
+}
+
+/* Card styles */
+.card-hover {
+  @apply transition-shadow hover:shadow-lg;
+}
+
+.card-clickable {
+  @apply cursor-pointer transition-transform hover:scale-[1.02] active:scale-[0.98];
+}
+
+/* Button styles */
+.button-loading {
+  @apply relative text-transparent;
+}
+
+.button-loading::after {
+  content: "";
+  @apply absolute top-1/2 left-1/2 w-4 h-4 -mt-2 -ml-2 animate-spin rounded-full border-2 border-t-transparent;
+  border-color: currentColor;
+}
+
+/* Progress styles */
+.progress-bar {
+  @apply w-full bg-muted rounded-full h-2;
+}
+
+.progress-fill {
+  @apply bg-primary h-2 rounded-full transition-all duration-300 ease-out;
+}
+
+/* Toggle styles */
+.toggle {
+  @apply relative inline-flex h-6 w-11 items-center rounded-full;
+}
+
+.toggle-track {
+  @apply bg-muted border border-border w-full h-6 rounded-full transition-colors;
+}
+
+.toggle-thumb {
+  @apply bg-background border-2 border-border absolute left-0.5 top-0.5 h-5 w-5 rounded-full transition-transform;
+}
+
+.toggle-checked .toggle-track {
+  @apply bg-primary border-primary;
+}
+
+.toggle-checked .toggle-thumb {
+  @apply transform translate-x-5 border-primary;
+}
+
+/* Tabs styles */
+.tabs {
+  @apply flex flex-col;
+}
+
+.tabs-list {
+  @apply flex space-x-1 border-b border-border;
+}
+
+.tabs-trigger {
+  @apply py-2 px-1 text-sm font-medium text-muted-foreground border-b-2 border-transparent hover:text-foreground data-[state=active]:text-foreground data-[state=active]:border-primary;
+}
+
+.tabs-content {
+  @apply mt-2;
+}
+
+/* Accordion styles */
+.accordion {
+  @apply flex flex-col;
+}
+
+.accordion-item {
+  @apply border border-border;
+}
+
+.accordion-trigger {
+  @apply flex w-full items-center justify-between p-4 text-left font-medium transition-colors hover:bg-muted;
+}
+
+.accordion-content {
+  @apply overflow-hidden text-sm;
+}
+
+.accordion-content-hidden {
+  @apply max-h-0;
+}
+
+.accordion-content-visible {
+  @apply max-h-96 py-4;
+}

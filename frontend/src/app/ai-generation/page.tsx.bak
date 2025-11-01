@@ -1,0 +1,230 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { AIGenerationHistory } from '@/components/ai-generation/AIGenerationHistory'
+import { AIGenerationResult } from '@/components/ai-generation/AIGenerationResult'
+import { RouteGuard } from '@/components/auth/route-guard'
+import { aiGenerationApi } from '@/lib/api'
+import { AIGenerationWithDetails, AIGenerationStatus } from '@/types'
+
+function AIGenerationPageContent() {
+  const router = useRouter()
+  const [selectedGeneration, setSelectedGeneration] = useState<AIGenerationWithDetails | null>(null)
+  const [recentGenerations, setRecentGenerations] = useState<AIGenerationWithDetails[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    fetchRecentGenerations()
+  }, [])
+
+  const fetchRecentGenerations = async () => {
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      const response = await aiGenerationApi.getAIGenerations({
+        limit: 5,
+        order_by: 'created_at',
+        order_desc: true,
+      })
+      
+      if (response.success && response.data) {
+        setRecentGenerations(response.data.generations)
+      } else {
+        setError(response.error || '获取最近生成记录失败')
+      }
+    } catch (err) {
+      setError('获取最近生成记录失败')
+      console.error('Failed to fetch recent generations:', err)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleCreateNew = () => {
+    router.push('/ai-generation/new')
+  }
+
+  const handleCreateEmergencyPlan = () => {
+    router.push('/ai-generation/new?type=emergency_plan')
+  }
+
+  const handleCreateEnvironmentalAssessment = () => {
+    router.push('/ai-generation/new?type=environmental_assessment')
+  }
+
+  const handleGenerationSelect = (generation: AIGenerationWithDetails) => {
+    setSelectedGeneration(generation)
+  }
+
+  const handleCopy = async (content: string) => {
+    try {
+      await navigator.clipboard.writeText(content)
+      // 这里可以添加成功提示
+    } catch (err) {
+      console.error('Failed to copy content:', err)
+      // 这里可以添加失败提示
+    }
+  }
+
+  const handleDownload = (content: string, filename: string) => {
+    const blob = new Blob([content], { type: 'text/plain' })
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = filename
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(url)
+  }
+
+  const handleRegenerate = (id: number) => {
+    router.push(`/ai-generation/new?regenerate=${id}`)
+  }
+
+  const handleBackToList = () => {
+    setSelectedGeneration(null)
+    fetchRecentGenerations() // 刷新列表
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <div className="px-4 py-6 sm:px-0">
+          {/* 页面标题 */}
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-gray-900">
+              AI内容生成
+            </h1>
+            <p className="mt-2 text-gray-600">
+              使用AI技术生成专业内容，支持多种生成模式和配置选项
+            </p>
+          </div>
+
+          {/* 生成选项 */}
+          <div className="mb-8">
+            <Card>
+              <CardHeader>
+                <CardTitle>选择生成类型</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="text-center p-6 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
+                    <div className="text-4xl mb-4">📝</div>
+                    <h3 className="text-lg font-semibold mb-2">通用内容生成</h3>
+                    <p className="text-gray-600 mb-4">
+                      根据自定义提示词生成各类专业内容
+                    </p>
+                    <Button onClick={handleCreateNew}>
+                      开始生成
+                    </Button>
+                  </div>
+                  
+                  <div className="text-center p-6 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
+                    <div className="text-4xl mb-4">🚨</div>
+                    <h3 className="text-lg font-semibold mb-2">应急预案生成</h3>
+                    <p className="text-gray-600 mb-4">
+                      基于企业信息生成专业的应急预案文档
+                    </p>
+                    <Button onClick={handleCreateEmergencyPlan}>
+                      生成预案
+                    </Button>
+                  </div>
+                  
+                  <div className="text-center p-6 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
+                    <div className="text-4xl mb-4">🌍</div>
+                    <h3 className="text-lg font-semibold mb-2">环评报告生成</h3>
+                    <p className="text-gray-600 mb-4">
+                      根据项目信息生成环境影响评价报告
+                    </p>
+                    <Button onClick={handleCreateEnvironmentalAssessment}>
+                      生成报告
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* 错误提示 */}
+          {error && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-md">
+              <div className="text-red-800">{error}</div>
+            </div>
+          )}
+
+          {/* 选中生成详情 */}
+          {selectedGeneration && (
+            <div className="mb-8">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-semibold">生成详情</h2>
+                <Button variant="outline" onClick={handleBackToList}>
+                  返回列表
+                </Button>
+              </div>
+              <AIGenerationResult
+                generation={selectedGeneration}
+                onCopy={handleCopy}
+                onDownload={handleDownload}
+                onRegenerate={handleRegenerate}
+              />
+            </div>
+          )}
+
+          {/* 最近生成记录 */}
+          {!selectedGeneration && (
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-semibold">最近生成记录</h2>
+                <Button variant="outline" onClick={() => router.push('/ai-generation/history')}>
+                  查看全部
+                </Button>
+              </div>
+              
+              {isLoading ? (
+                <div className="flex justify-center items-center py-12">
+                  <div className="text-lg text-gray-600">加载中...</div>
+                </div>
+              ) : recentGenerations.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="text-lg text-gray-600 mb-4">
+                    您还没有任何生成记录
+                  </div>
+                  <Button onClick={handleCreateNew}>
+                    创建第一个生成任务
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {recentGenerations.map((generation) => (
+                    <AIGenerationResult
+                      key={generation.id}
+                      generation={generation}
+                      onCopy={handleCopy}
+                      onDownload={handleDownload}
+                      onRegenerate={handleRegenerate}
+                      showActions={false}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default function AIGenerationPage() {
+  return (
+    <RouteGuard requireAuth={true}>
+      <AIGenerationPageContent />
+    </RouteGuard>
+  )
+}

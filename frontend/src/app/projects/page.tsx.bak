@@ -1,0 +1,225 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { Button } from '@/components/ui/button'
+import { ProjectCard } from '@/components/projects/project-card'
+import { ProjectFilters } from '@/components/projects/project-filters'
+import { RouteGuard } from '@/components/auth/route-guard'
+import { projectApi } from '@/lib/api'
+import { useProjectStore } from '@/store'
+import { ProjectWithDetails, ProjectType, ProjectStatus } from '@/types'
+
+function ProjectsPageContent() {
+  const router = useRouter()
+  const { projects, setProjects, setLoading } = useProjectStore()
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(0)
+  const [filters, setFilters] = useState({
+    search: '',
+    type: undefined as ProjectType | undefined,
+    status: undefined as ProjectStatus | undefined,
+  })
+
+  const pageSize = 12
+
+  useEffect(() => {
+    fetchProjects()
+  }, [currentPage, filters])
+
+  const fetchProjects = async () => {
+    setIsLoading(true)
+    setError(null)
+    setLoading(true)
+
+    try {
+      const params = {
+        skip: (currentPage - 1) * pageSize,
+        limit: pageSize,
+        ...(filters.search && { search: filters.search }),
+        ...(filters.type && { type: filters.type }),
+        ...(filters.status && { status: filters.status }),
+      }
+
+      const response = await projectApi.getProjects(params)
+      
+      if (response.success && response.data) {
+        setProjects(response.data.projects)
+        setTotalPages(Math.ceil(response.data.total / pageSize))
+      } else {
+        setError(response.error || '获取项目列表失败')
+      }
+    } catch (err) {
+      setError('获取项目列表失败')
+      console.error('Failed to fetch projects:', err)
+    } finally {
+      setIsLoading(false)
+      setLoading(false)
+    }
+  }
+
+  const handleViewProject = (id: number) => {
+    router.push(`/projects/${id}`)
+  }
+
+  const handleEditProject = (id: number) => {
+    router.push(`/projects/${id}/edit`)
+  }
+
+  const handleDeleteProject = async (id: number) => {
+    if (!confirm('确定要删除这个项目吗？此操作不可撤销。')) {
+      return
+    }
+
+    try {
+      const response = await projectApi.deleteProject(id)
+      
+      if (response.success) {
+        // 从本地状态中移除项目
+        setProjects(projects.filter(p => p.id !== id))
+      } else {
+        setError(response.error || '删除项目失败')
+      }
+    } catch (err) {
+      setError('删除项目失败')
+      console.error('Failed to delete project:', err)
+    }
+  }
+
+  const handleCreateProject = () => {
+    router.push('/projects/new')
+  }
+
+  const handleFiltersChange = (newFilters: typeof filters) => {
+    setFilters(newFilters)
+    setCurrentPage(1) // 重置到第一页
+  }
+
+  const handleResetFilters = () => {
+    setFilters({
+      search: '',
+      type: undefined,
+      status: undefined,
+    })
+    setCurrentPage(1)
+  }
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page)
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <div className="px-4 py-6 sm:px-0">
+          <div className="mb-8 flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">
+                项目管理
+              </h1>
+              <p className="mt-2 text-gray-600">
+                管理和查看您的所有项目
+              </p>
+            </div>
+            <Button onClick={handleCreateProject}>
+              创建新项目
+            </Button>
+          </div>
+
+          <ProjectFilters
+            filters={filters}
+            onFiltersChange={handleFiltersChange}
+            onReset={handleResetFilters}
+          />
+
+          {error && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-md">
+              <div className="text-red-800">{error}</div>
+            </div>
+          )}
+
+          {isLoading ? (
+            <div className="flex justify-center items-center py-12">
+              <div className="text-lg text-gray-600">加载中...</div>
+            </div>
+          ) : projects.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="text-lg text-gray-600 mb-4">
+                {filters.search || filters.type || filters.status
+                  ? '没有找到符合筛选条件的项目'
+                  : '您还没有任何项目'
+                }
+              </div>
+              {!filters.search && !filters.type && !filters.status && (
+                <Button onClick={handleCreateProject}>
+                  创建第一个项目
+                </Button>
+              )}
+            </div>
+          ) : (
+            <>
+              <div className="mb-4 text-sm text-gray-600">
+                共 {projects.length} 个项目
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                {projects.map((project) => (
+                  <ProjectCard
+                    key={project.id}
+                    project={project}
+                    onView={handleViewProject}
+                    onEdit={handleEditProject}
+                    onDelete={handleDeleteProject}
+                  />
+                ))}
+              </div>
+
+              {totalPages > 1 && (
+                <div className="flex justify-center items-center space-x-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                  >
+                    上一页
+                  </Button>
+                  
+                  <div className="flex items-center space-x-1">
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                      <Button
+                        key={page}
+                        variant={currentPage === page ? 'default' : 'outline'}
+                        onClick={() => handlePageChange(page)}
+                        className="w-10 h-10 p-0"
+                      >
+                        {page}
+                      </Button>
+                    ))}
+                  </div>
+                  
+                  <Button
+                    variant="outline"
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                  >
+                    下一页
+                  </Button>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default function ProjectsPage() {
+  return (
+    <RouteGuard requireAuth={true}>
+      <ProjectsPageContent />
+    </RouteGuard>
+  )
+}

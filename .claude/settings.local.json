@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(taskkill /F /IM node.exe)",
+      "Bash(timeout 3 ping 127.0.0.1 -n 1)",
+      "Bash(npx kill-port 3000 3001 3002 3003 3004 3005 3006 3007 3008 3009 3010)",
+      "Bash(xargs rm -f)",
+      "Bash(for file in src/components/ui/badge.tsx src/components/state/loading-boundary.tsx src/components/ui/loading.tsx src/components/ui/toast.tsx src/components/theme/theme-provider.tsx src/components/state/empty-state.tsx src/components/layout/app-layout.tsx src/components/layout/content-layout.tsx src/components/layout/page-layout.tsx src/components/navigation/mobile-nav.tsx src/components/navigation/breadcrumb.tsx src/components/navigation/sidebar.tsx src/components/navigation/navbar.tsx src/components/theme/theme-toggle.tsx src/components/ui/form.tsx src/components/ui/pagination.tsx src/components/ui/table.tsx src/components/ui/dropdown.tsx src/components/ui/modal.tsx src/components/ui/card.tsx src/components/ui/input.tsx)",
+      "Bash(do sed -i 's/import \\* as React from \"\"react\"\"/import React from \"\"react\"\"/g' \"$file\")",
+      "Bash(done)",
+      "Bash(xargs sed -i 's/import \\* as React from \"\"\"\"react\"\"\"\"/import React from \"\"\"\"react\"\"\"\"/g')",
+      "Bash(npm install @radix-ui/react-slot@latest @radix-ui/react-compose-refs@latest --legacy-peer-deps)",
+      "Bash(curl -I http://localhost:3001)",
+      "Bash(curl -I http://localhost:3002)",
+      "Bash(curl -I http://localhost:3003)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
