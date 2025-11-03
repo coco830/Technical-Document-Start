@@ -26,7 +26,7 @@ interface CreateProjectData {
   status?: 'active' | 'completed' | 'archived'
 }
 
-export default function Projects() {
+export default function ProjectsPage() {
   const navigate = useNavigate()
   const [projects, setProjects] = useState<Project[]>([])
   const [loading, setLoading] = useState(true)
@@ -85,16 +85,7 @@ export default function Projects() {
       await apiClient.post('/projects/', newProject)
       setIsCreateModalOpen(false)
       setNewProject({ title: '', description: '', status: 'active' })
-
-      // 重置筛选器和页码到第一页，并立即刷新列表
-      setStatusFilter('')
-      setSearch('')
-      setPage(1)
-
-      // 立即刷新项目列表，不依赖useEffect
-      setTimeout(() => {
-        fetchProjects()
-      }, 0)
+      fetchProjects()
     } catch (error: any) {
       console.error('创建项目失败:', error)
       alert(error.response?.data?.detail || '创建项目失败')
