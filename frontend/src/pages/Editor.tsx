@@ -5,11 +5,8 @@ import StarterKit from '@tiptap/starter-kit'
 import Image from '@tiptap/extension-image'
 import Placeholder from '@tiptap/extension-placeholder'
 import TextAlign from '@tiptap/extension-text-align'
-// 尝试使用默认导入（TipTap v3的标准方式）
-import Table from '@tiptap/extension-table'
-import TableRow from '@tiptap/extension-table-row'
-import TableCell from '@tiptap/extension-table-cell'
-import TableHeader from '@tiptap/extension-table-header'
+// TipTap v3 使用命名导出而不是默认导出
+import { Table, TableRow, TableCell, TableHeader } from '@tiptap/extension-table'
 import { apiClient } from '@/utils/api'
 import EditorBubbleMenu from '@/components/EditorBubbleMenu'
 import OutlineSidebar from '@/components/OutlineSidebar'
@@ -77,6 +74,9 @@ export default function EditorPage() {
       }),
       Table.configure({
         resizable: true,
+        HTMLAttributes: {
+          class: 'border-collapse border border-gray-300',
+        },
       }),
       TableRow,
       TableHeader,
@@ -662,6 +662,76 @@ export default function EditorPage() {
                 >
                   📊
                 </button>
+
+                {/* 表格编辑工具 - 只在光标在表格内时显示 */}
+                {editor.isActive('table') && (
+                  <>
+                    <div className="w-px h-6 bg-gray-300 mx-2"></div>
+                    <button
+                      onClick={() => editor.chain().focus().addColumnBefore().run()}
+                      className="p-2 rounded hover:bg-gray-200 text-xs"
+                      title="在前面插入列"
+                    >
+                      ⬅️➕
+                    </button>
+                    <button
+                      onClick={() => editor.chain().focus().addColumnAfter().run()}
+                      className="p-2 rounded hover:bg-gray-200 text-xs"
+                      title="在后面插入列"
+                    >
+                      ➕➡️
+                    </button>
+                    <button
+                      onClick={() => editor.chain().focus().deleteColumn().run()}
+                      className="p-2 rounded hover:bg-gray-200 text-xs"
+                      title="删除列"
+                    >
+                      🗑️⬆️
+                    </button>
+                    <button
+                      onClick={() => editor.chain().focus().addRowBefore().run()}
+                      className="p-2 rounded hover:bg-gray-200 text-xs"
+                      title="在上方插入行"
+                    >
+                      ⬆️➕
+                    </button>
+                    <button
+                      onClick={() => editor.chain().focus().addRowAfter().run()}
+                      className="p-2 rounded hover:bg-gray-200 text-xs"
+                      title="在下方插入行"
+                    >
+                      ➕⬇️
+                    </button>
+                    <button
+                      onClick={() => editor.chain().focus().deleteRow().run()}
+                      className="p-2 rounded hover:bg-gray-200 text-xs"
+                      title="删除行"
+                    >
+                      🗑️➡️
+                    </button>
+                    <button
+                      onClick={() => editor.chain().focus().mergeCells().run()}
+                      className="p-2 rounded hover:bg-gray-200 text-xs"
+                      title="合并单元格"
+                    >
+                      ⬜
+                    </button>
+                    <button
+                      onClick={() => editor.chain().focus().splitCell().run()}
+                      className="p-2 rounded hover:bg-gray-200 text-xs"
+                      title="拆分单元格"
+                    >
+                      ⬛
+                    </button>
+                    <button
+                      onClick={() => editor.chain().focus().deleteTable().run()}
+                      className="p-2 rounded hover:bg-red-200 text-red-600 text-xs"
+                      title="删除表格"
+                    >
+                      🗑️
+                    </button>
+                  </>
+                )}
 
                 <div className="w-px h-6 bg-gray-300 mx-2"></div>
 
