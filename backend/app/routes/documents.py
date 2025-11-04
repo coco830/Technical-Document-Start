@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, status, Depends, Query
+from fastapi import APIRouter, HTTPException, status, Depends, Query, File, UploadFile
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
 from typing import Optional
@@ -16,6 +16,10 @@ from app.schemas.document import (
 )
 from app.utils.auth import get_current_user
 import math
+import os
+import uuid
+import shutil
+from pathlib import Path
 
 router = APIRouter(prefix="/api/documents", tags=["文档管理"])
 
@@ -383,3 +387,66 @@ async def create_from_template(
         )
 
     return DocumentResponse.model_validate(new_document)
+
+@router.post("/upload-image")
+async def upload_image(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    上传图片到服务器
+
+    - **file**: 图片文件（支持 jpg, jpeg, png, gif, webp）
+    - 返回图片访问URL
+    """
+    # 验证文件类型
+    allowed_types = ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"]
+    if file.content_type not in allowed_types:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"不支持的文件类型: {file.content_type}，仅支持 jpg, jpeg, png, gif, webp"
+        )
+
+    # 验证文件大小 (限制为 5MB)
+    file_size = 0
+    chunk_size = 1024 * 1024  # 1MB chunks
+
+    # 读取文件并检查大小
+    contents = await file.read()
+    file_size = len(contents)
+
+    if file_size > 5 * 1024 * 1024:  # 5MB
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="文件大小不能超过 5MB"
+        )
+
+    # 生成唯一文件名
+    file_extension = Path(file.filename).suffix
+    unique_filename = f"{uuid.uuid4()}{file_extension}"
+
+    # 确保上传目录存在
+    upload_dir = Path("uploads/images")
+    upload_dir.mkdir(parents=True, exist_ok=True)
+
+    # 保存文件
+    file_path = upload_dir / unique_filename
+
+    try:
+        with open(file_path, "wb") as buffer:
+            buffer.write(contents)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"文件保存失败: {str(e)}"
+        )
+
+    # 返回图片URL
+    image_url = f"/uploads/images/{unique_filename}"
+
+    return {
+        "url": image_url,
+        "filename": unique_filename,
+        "size": file_size,
+        "content_type": file.content_type
+    }

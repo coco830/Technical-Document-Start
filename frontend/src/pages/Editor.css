@@ -138,22 +138,43 @@
   text-align: justify;
 }
 
-/* Table Support (if needed later) */
+/* Table Support - Enhanced */
 .ProseMirror table {
   border-collapse: collapse;
   width: 100%;
-  margin-bottom: 1rem;
+  margin: 1rem 0;
+  overflow: hidden;
+  table-layout: fixed;
 }
 
 .ProseMirror th,
 .ProseMirror td {
   border: 1px solid #e5e7eb;
-  padding: 0.5rem;
+  padding: 0.75rem;
+  position: relative;
+  vertical-align: top;
+  box-sizing: border-box;
+  min-width: 100px;
 }
 
 .ProseMirror th {
   background-color: #f9fafb;
   font-weight: 600;
+  text-align: left;
+}
+
+.ProseMirror .selectedCell {
+  background-color: #e0f2fe;
+}
+
+.ProseMirror .column-resize-handle {
+  position: absolute;
+  right: -2px;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background-color: #22c55e;
+  cursor: col-resize;
 }
 
 /* Horizontal Rule */
@@ -161,4 +182,78 @@
   border: none;
   border-top: 2px solid #e5e7eb;
   margin: 2rem 0;
+}
+
+/* Mobile Responsive Optimization */
+@media (max-width: 768px) {
+  .ProseMirror {
+    min-height: 400px;
+    padding: 1rem;
+    font-size: 16px; /* Prevent iOS auto-zoom */
+  }
+
+  .ProseMirror h1 {
+    font-size: 1.75rem;
+  }
+
+  .ProseMirror h2 {
+    font-size: 1.5rem;
+  }
+
+  .ProseMirror h3 {
+    font-size: 1.25rem;
+  }
+
+  .ProseMirror table {
+    font-size: 0.875rem;
+  }
+
+  .ProseMirror th,
+  .ProseMirror td {
+    padding: 0.5rem;
+    min-width: 80px;
+  }
+
+  .ProseMirror pre {
+    font-size: 0.75rem;
+    padding: 0.75rem;
+  }
+
+  .ProseMirror img {
+    max-width: 100%;
+    height: auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .ProseMirror {
+    padding: 0.75rem;
+  }
+
+  .ProseMirror table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+}
+
+/* Animation for save status */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Smooth transitions */
+* {
+  transition-property: background-color, border-color, color, fill, stroke;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
 }

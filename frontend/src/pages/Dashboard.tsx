@@ -26,6 +26,12 @@ export default function Dashboard() {
                 项目列表
               </button>
               <button
+                onClick={() => navigate('/templates')}
+                className="text-gray-700 hover:text-primary px-3 py-2 rounded-md text-sm font-medium"
+              >
+                模板库
+              </button>
+              <button
                 onClick={handleLogout}
                 className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
               >
@@ -63,10 +69,10 @@ export default function Dashboard() {
               <h3 className="text-xl font-semibold mb-2">模板库</h3>
               <p className="text-gray-600 mb-4">浏览和使用标准化文档模板</p>
               <button
-                className="bg-gray-300 text-gray-600 px-4 py-2 rounded-md cursor-not-allowed"
-                disabled
+                onClick={() => navigate('/templates')}
+                className="bg-primary text-white px-4 py-2 rounded-md hover:bg-green-700"
               >
-                即将开放
+                进入
               </button>
             </div>
           </div>

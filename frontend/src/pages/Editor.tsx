@@ -1,11 +1,20 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Image from '@tiptap/extension-image'
 import Placeholder from '@tiptap/extension-placeholder'
 import TextAlign from '@tiptap/extension-text-align'
+import Table from '@tiptap/extension-table'
+import TableRow from '@tiptap/extension-table-row'
+import TableCell from '@tiptap/extension-table-cell'
+import TableHeader from '@tiptap/extension-table-header'
 import { apiClient } from '@/utils/api'
+import EditorBubbleMenu from '@/components/EditorBubbleMenu'
+import OutlineSidebar from '@/components/OutlineSidebar'
+import SaveStatusIndicator from '@/components/SaveStatusIndicator'
+import CommentsPanel from '@/components/CommentsPanel'
+import './Editor.css'
 
 interface Document {
   id: number
@@ -36,6 +45,17 @@ export default function EditorPage() {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
   const [showTemplateModal, setShowTemplateModal] = useState(false)
   const [templates, setTemplates] = useState<Document[]>([])
+  const [showOutline, setShowOutline] = useState(true) // 侧边栏大纲显示状态
+  const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'unsaved' | 'error'>('saved') // 保存状态
+
+  // 模板设置状态
+  const [showTemplateSettings, setShowTemplateSettings] = useState(false)
+  const [isTemplate, setIsTemplate] = useState(false)
+  const [templateCategory, setTemplateCategory] = useState('')
+  const [templateDescription, setTemplateDescription] = useState('')
+
+  // 评论面板状态
+  const [showComments, setShowComments] = useState(false)
 
   // TipTap 编辑器
   const editor = useEditor({
@@ -51,6 +71,12 @@ export default function EditorPage() {
       TextAlign.configure({
         types: ['heading', 'paragraph'],
       }),
+      Table.configure({
+        resizable: true,
+      }),
+      TableRow,
+      TableHeader,
+      TableCell,
     ],
     content: '',
     editorProps: {
@@ -60,6 +86,7 @@ export default function EditorPage() {
     },
     onUpdate: ({ editor }) => {
       setHasUnsavedChanges(true)
+      setSaveStatus('unsaved')
     },
   })
 
@@ -120,6 +147,36 @@ export default function EditorPage() {
     return () => window.document.removeEventListener('keydown', handleKeyDown)
   }, [currentDoc, title, editor])
 
+  // 提取文档大纲
+  const outline = useMemo(() => {
+    if (!editor) return []
+
+    const headings: { level: number; text: string; id: string }[] = []
+    const json = editor.getJSON()
+
+    const extractHeadings = (node: any) => {
+      if (node.type === 'heading' && node.content) {
+        const text = node.content.map((n: any) => n.text || '').join('')
+        const id = `heading-${headings.length}`
+        headings.push({
+          level: node.attrs.level,
+          text,
+          id
+        })
+      }
+
+      if (node.content) {
+        node.content.forEach((child: any) => extractHeadings(child))
+      }
+    }
+
+    if (json.content) {
+      json.content.forEach(extractHeadings)
+    }
+
+    return headings
+  }, [editor?.state.doc.content])
+
   const fetchDocument = async (docId: string) => {
     try {
       setLoading(true)
@@ -133,6 +190,11 @@ export default function EditorPage() {
       editor?.commands.setContent(doc.content || '')
       setLastSaved(new Date(doc.updated_at))
       setHasUnsavedChanges(false)
+
+      // 初始化模板设置
+      setIsTemplate(doc.is_template === 1)
+      setTemplateCategory(doc.doc_metadata?.category || '')
+      setTemplateDescription(doc.doc_metadata?.description || '')
     } catch (error: any) {
       console.error('加载文档失败:', error)
       setError(error.message || '加载文档失败')
@@ -172,6 +234,7 @@ export default function EditorPage() {
 
     try {
       setSaving(true)
+      setSaveStatus('saving')
 
       await apiClient.post(`/documents/${currentDoc.id}/autosave`, {
         content: editor.getHTML(),
@@ -181,8 +244,10 @@ export default function EditorPage() {
       setCurrentDoc({ ...currentDoc, version: currentDoc.version + 1 })
       setLastSaved(new Date())
       setHasUnsavedChanges(false)
+      setSaveStatus('saved')
     } catch (error: any) {
       console.error('自动保存失败:', error)
+      setSaveStatus('error')
 
       if (error.response?.status === 409) {
         alert('文档已被其他用户修改，请刷新页面获取最新版本')
@@ -201,12 +266,19 @@ export default function EditorPage() {
 
       const content = editor.getHTML()
 
+      // 准备元数据
+      const metadata: Record<string, any> = {}
+      if (templateCategory) metadata.category = templateCategory
+      if (templateDescription) metadata.description = templateDescription
+
       if (currentDoc) {
         // 更新现有文档
         const res = await apiClient.patch<Document>(`/documents/${currentDoc.id}`, {
           title,
           content,
-          content_type: 'html'
+          content_type: 'html',
+          is_template: isTemplate ? 1 : 0,
+          doc_metadata: Object.keys(metadata).length > 0 ? metadata : null
         })
 
         setCurrentDoc(res.data)
@@ -219,10 +291,11 @@ export default function EditorPage() {
           title,
           content,
           content_type: 'html',
-          is_template: 0
+          is_template: isTemplate ? 1 : 0,
+          doc_metadata: Object.keys(metadata).length > 0 ? metadata : null
         })
 
-        setDocument(res.data)
+        setCurrentDoc(res.data)
         setLastSaved(new Date())
         setHasUnsavedChanges(false)
         navigate(`/editor/${res.data.id}`, { replace: true })
@@ -238,7 +311,7 @@ export default function EditorPage() {
   }
 
   const handleImageUpload = () => {
-    const input = document.createElement('input')
+    const input = window.document.createElement('input')
     input.type = 'file'
     input.accept = 'image/*'
     input.onchange = async (e) => {
@@ -251,13 +324,24 @@ export default function EditorPage() {
         return
       }
 
-      // 转换为 Base64
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        const base64 = e.target?.result as string
-        editor?.chain().focus().setImage({ src: base64 }).run()
+      try {
+        // 上传图片到服务器
+        const formData = new FormData()
+        formData.append('file', file)
+
+        const response = await apiClient.post('/documents/upload-image', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        })
+
+        // 插入图片URL到编辑器
+        const imageUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}${response.data.url}`
+        editor?.chain().focus().setImage({ src: imageUrl }).run()
+      } catch (error: any) {
+        console.error('图片上传失败:', error)
+        alert(error.response?.data?.detail || '图片上传失败，请重试')
       }
-      reader.readAsDataURL(file)
     }
     input.click()
   }
@@ -363,17 +447,7 @@ export default function EditorPage() {
                 className="text-xl font-semibold border-none focus:outline-none focus:ring-2 focus:ring-primary px-2 py-1 rounded flex-1 min-w-0"
                 placeholder="输入文档标题..."
               />
-              {hasUnsavedChanges && !saving && (
-                <span className="text-sm text-yellow-600 flex-shrink-0">● 未保存</span>
-              )}
-              {saving && (
-                <span className="text-sm text-blue-600 flex-shrink-0">💾 保存中...</span>
-              )}
-              {lastSaved && !hasUnsavedChanges && !saving && (
-                <span className="text-sm text-gray-500 hidden sm:block flex-shrink-0">
-                  ✓ {lastSaved.toLocaleTimeString('zh-CN')}
-                </span>
-              )}
+              <SaveStatusIndicator status={saveStatus} lastSaved={lastSaved} />
             </div>
 
             {/* 右侧按钮 */}
@@ -387,6 +461,29 @@ export default function EditorPage() {
                 title="从模板创建"
               >
                 📋 模板
+              </button>
+              <button
+                onClick={() => setShowTemplateSettings(true)}
+                className={`px-3 py-2 border rounded-md transition-colors text-sm ${
+                  isTemplate
+                    ? 'border-primary bg-primary/10 text-primary hover:bg-primary/20'
+                    : 'border-gray-300 hover:bg-gray-50'
+                }`}
+                title={isTemplate ? '已标记为模板' : '设为模板'}
+              >
+                ⚙️ {isTemplate ? '模板设置' : '设为模板'}
+              </button>
+              <button
+                onClick={() => setShowComments(!showComments)}
+                className={`px-3 py-2 border rounded-md transition-colors text-sm ${
+                  showComments
+                    ? 'border-primary bg-primary/10 text-primary hover:bg-primary/20'
+                    : 'border-gray-300 hover:bg-gray-50'
+                }`}
+                title="评论与批注"
+                disabled={!currentDoc}
+              >
+                💬 评论
               </button>
               <button
                 onClick={handleSave}
@@ -526,6 +623,13 @@ export default function EditorPage() {
                 >
                   🖼️
                 </button>
+                <button
+                  onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
+                  className="p-2 rounded hover:bg-gray-200"
+                  title="插入表格"
+                >
+                  📊
+                </button>
 
                 <div className="w-px h-6 bg-gray-300 mx-2"></div>
 
@@ -562,9 +666,27 @@ export default function EditorPage() {
       {/* 编辑器区域 */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="bg-white rounded-lg shadow-sm border min-h-[600px]">
+          {editor && <EditorBubbleMenu editor={editor} />}
           <EditorContent editor={editor} />
         </div>
       </div>
+
+      {/* 侧边栏大纲导航 */}
+      {editor && (
+        <OutlineSidebar
+          editor={editor}
+          outline={outline}
+          show={showOutline}
+          onToggle={() => setShowOutline(!showOutline)}
+        />
+      )}
+
+      {/* 评论面板 */}
+      <CommentsPanel
+        documentId={currentDoc?.id || null}
+        show={showComments}
+        onToggle={() => setShowComments(!showComments)}
+      />
 
       {/* 模板选择模态框 */}
       {showTemplateModal && (
@@ -606,6 +728,111 @@ export default function EditorPage() {
                 className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
               >
                 关闭
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 模板设置对话框 */}
+      {showTemplateSettings && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h2 className="text-xl font-semibold text-gray-900">模板设置</h2>
+            </div>
+
+            <div className="p-6 space-y-4">
+              {/* 是否标记为模板 */}
+              <div className="flex items-center justify-between">
+                <label className="flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={isTemplate}
+                    onChange={(e) => {
+                      setIsTemplate(e.target.checked)
+                      setHasUnsavedChanges(true)
+                    }}
+                    className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary mr-2"
+                  />
+                  <span className="text-sm font-medium text-gray-900">标记为模板</span>
+                </label>
+                {isTemplate && (
+                  <span className="px-2 py-1 bg-primary/10 text-primary text-xs rounded">
+                    模板
+                  </span>
+                )}
+              </div>
+
+              {isTemplate && (
+                <>
+                  {/* 模板分类 */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      模板分类
+                    </label>
+                    <select
+                      value={templateCategory}
+                      onChange={(e) => {
+                        setTemplateCategory(e.target.value)
+                        setHasUnsavedChanges(true)
+                      }}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                    >
+                      <option value="">选择分类</option>
+                      <option value="环保报告">环保报告</option>
+                      <option value="技术文书">技术文书</option>
+                      <option value="会议纪要">会议纪要</option>
+                      <option value="工作总结">工作总结</option>
+                      <option value="项目方案">项目方案</option>
+                      <option value="其他">其他</option>
+                    </select>
+                  </div>
+
+                  {/* 模板描述 */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      模板描述
+                    </label>
+                    <textarea
+                      value={templateDescription}
+                      onChange={(e) => {
+                        setTemplateDescription(e.target.value)
+                        setHasUnsavedChanges(true)
+                      }}
+                      rows={3}
+                      placeholder="简要描述此模板的用途和特点..."
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
+                    />
+                    <p className="mt-1 text-xs text-gray-500">
+                      此描述将显示在模板库中，帮助用户了解模板用途
+                    </p>
+                  </div>
+                </>
+              )}
+
+              {!isTemplate && (
+                <p className="text-sm text-gray-500 bg-gray-50 p-3 rounded-lg">
+                  将文档标记为模板后，它将出现在模板库中供创建新文档时使用。你可以为模板设置分类和描述。
+                </p>
+              )}
+            </div>
+
+            <div className="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
+              <button
+                onClick={() => setShowTemplateSettings(false)}
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                关闭
+              </button>
+              <button
+                onClick={() => {
+                  setShowTemplateSettings(false)
+                  // 保存时会自动包含模板设置
+                }}
+                className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
+              >
+                完成
               </button>
             </div>
           </div>

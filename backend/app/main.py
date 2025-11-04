@@ -1,7 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 import os
 from dotenv import load_dotenv
+from pathlib import Path
 
 # 加载环境变量
 load_dotenv()
@@ -37,8 +39,14 @@ async def health_check():
     return {"status": "healthy"}
 
 # 引入路由模块
-from app.routes import auth, projects, documents
+from app.routes import auth, projects, documents, comments
 
 app.include_router(auth.router)
 app.include_router(projects.router)
 app.include_router(documents.router)
+app.include_router(comments.router)
+
+# 配置静态文件服务（用于图片访问）
+uploads_dir = Path("uploads")
+uploads_dir.mkdir(exist_ok=True)
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
