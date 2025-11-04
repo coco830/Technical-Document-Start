@@ -39,12 +39,13 @@ async def health_check():
     return {"status": "healthy"}
 
 # 引入路由模块
-from app.routes import auth, projects, documents, comments
+from app.routes import auth, projects, documents, comments, ai_generate
 
 app.include_router(auth.router)
 app.include_router(projects.router)
 app.include_router(documents.router)
 app.include_router(comments.router)
+app.include_router(ai_generate.router)
 
 # 配置静态文件服务（用于图片访问）
 uploads_dir = Path("uploads")

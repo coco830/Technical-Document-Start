@@ -1,0 +1,84 @@
+# AI 模板注册配置文件
+# 用于注册和管理所有可用的 AI 生成模板
+
+templates:
+  # 环保应急预案模板
+  - id: emergency_plan
+    name: "突发环境事件应急预案"
+    description: "用于生成符合 HJ941-2018 标准的环保应急预案"
+    category: "environmental"
+    version: "1.0.0"
+
+    # 模板文件路径
+    schema_path: "templates/emergency_plan.json"
+    prompt_template_path: "templates/emergency_plan.jinja2"
+
+    # 是否启用
+    enabled: true
+
+    # AI 模型配置
+    ai_config:
+      model: "gpt-4"  # 可选：gpt-3.5-turbo, gpt-4, claude-3, etc.
+      temperature: 0.7
+      max_tokens: 2000
+
+    # 缓存配置
+    cache:
+      enabled: true
+      ttl: 3600  # 缓存时间（秒）
+
+    # 所需的必填字段
+    required_fields:
+      - enterprise_info
+
+  # 环评报告模板（示例，未来扩展）
+  - id: environmental_assessment
+    name: "环境影响评价报告"
+    description: "环评报告自动生成模板"
+    category: "environmental"
+    version: "1.0.0"
+    schema_path: "templates/environmental_assessment.json"
+    prompt_template_path: "templates/environmental_assessment.jinja2"
+    enabled: false  # 暂未实现
+    ai_config:
+      model: "gpt-4"
+      temperature: 0.7
+      max_tokens: 2000
+    cache:
+      enabled: true
+      ttl: 3600
+
+# 全局配置
+global:
+  # 模板目录
+  templates_dir: "app/prompts/templates"
+
+  # 日志配置
+  logging:
+    enabled: true
+    level: "INFO"
+
+  # 安全配置
+  security:
+    # 启用 Jinja2 沙箱模式
+    enable_sandbox: true
+    # 允许的变量白名单（防止模板注入）
+    allowed_variables:
+      - enterprise_info
+      - hazardous_materials
+      - surrounding_receptors
+      - emergency_team_structure
+      - emergency_resources
+      - incident_types
+      - response_steps
+      - appendices
+      - section_title
+      - section_id
+    # 最大模板大小（字节）
+    max_template_size: 102400  # 100KB
+
+  # 限流配置
+  rate_limit:
+    enabled: true
+    requests_per_minute: 10
+    requests_per_hour: 100

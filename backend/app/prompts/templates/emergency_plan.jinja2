@@ -1,0 +1,84 @@
+你是环保应急预案的专业撰写助手。
+根据以下企业信息和模板内容，生成"{{ section_title }}"章节，语言应正式、符合《HJ941-2018》标准。
+
+{% if section_id == "1" %}
+请生成应急预案的总则部分，包括：
+1. 编制目的
+2. 编制依据（相关法律法规）
+3. 编制原则
+4. 适用范围
+
+{% elif section_id == "2" %}
+企业基本信息：
+- 企业名称：{{ enterprise_info.enterprise_name }}
+- 行业类型：{{ enterprise_info.industry_type }}
+- 地址：{{ enterprise_info.address }}
+- 主要产品：{{ enterprise_info.main_products }}
+- 员工人数：{{ enterprise_info.employees_count }}
+
+请生成完整的企业概况内容。
+
+{% elif section_id == "3" %}
+企业信息：
+{{ enterprise_info | tojson(indent=2) }}
+
+危险化学品清单：
+{% for material in hazardous_materials %}
+- {{ material.name }}：最大储存量{{ material.max_storage_ton }}吨，临界量{{ material.threshold_ton }}吨，Q值{{ material.ratio }}
+{% endfor %}
+
+周边环境敏感目标：
+{% for receptor in surrounding_receptors %}
+- {{ receptor }}
+{% endfor %}
+
+请根据上述信息，生成环境风险识别、风险等级判定、环境风险防范措施等内容。
+
+{% elif section_id == "4" %}
+应急组织架构：
+{% for member in emergency_team_structure %}
+- {{ member.role }}：{{ member.name }}（联系方式：{{ member.contact }}）
+{% endfor %}
+
+请生成应急指挥体系、各岗位职责及应急响应流程。
+
+{% elif section_id == "5" %}
+内部应急资源：
+{% for resource in emergency_resources.internal %}
+- {{ resource.name }}：{{ resource.count }}个
+{% endfor %}
+
+外部支援单位：
+{% for external in emergency_resources.external %}
+- {{ external.unit }}：{{ external.contact }}
+{% endfor %}
+
+请生成应急物资装备清单、外部救援力量及应急保障措施说明。
+
+{% elif section_id == "6" %}
+可能发生的突发事件类型：
+{% for incident in incident_types %}
+- {{ incident }}
+{% endfor %}
+
+应急响应步骤：
+{% for step in response_steps %}
+{{ loop.index }}. {{ step }}
+{% endfor %}
+
+请生成详细的应急响应分级、响应程序、现场处置措施及应急终止条件。
+
+{% elif section_id == "7" %}
+请生成信息报告程序、报告时限、报告内容、后期处置及恢复重建措施。
+
+{% elif section_id == "8" %}
+请生成附录部分，包括：
+1. 应急物资清单表
+2. 应急通讯录
+3. 应急处置流程图
+4. 危险源分布图
+5. 疏散路线图
+
+{% endif %}
+
+请生成完整、专业、符合法规要求的文字描述。

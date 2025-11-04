@@ -1,0 +1,54 @@
+{
+  "document_type": "突发环境事件应急预案",
+  "description": "环保应急预案标准模板",
+  "sections": [
+    {
+      "id": "1",
+      "title": "总则",
+      "prompt": "生成应急预案的总则部分，包括编制目的、依据、原则等内容。",
+      "variables": []
+    },
+    {
+      "id": "2",
+      "title": "企业概况",
+      "prompt": "根据企业的基本信息生成企业概况内容。",
+      "variables": ["enterprise_name", "industry_type", "address", "main_products", "employees_count"]
+    },
+    {
+      "id": "3",
+      "title": "环境风险分析",
+      "prompt": "结合危险物质和周边环境信息生成风险识别与分级说明。",
+      "variables": ["hazardous_materials", "storage_amounts", "surrounding_receptors"]
+    },
+    {
+      "id": "4",
+      "title": "应急组织机构及职责",
+      "prompt": "根据组织结构数据生成指挥体系及职责说明。",
+      "variables": ["emergency_team_structure"]
+    },
+    {
+      "id": "5",
+      "title": "应急资源与保障",
+      "prompt": "生成企业内部应急物资、设备及外部支援单位的说明。",
+      "variables": ["emergency_resources"]
+    },
+    {
+      "id": "6",
+      "title": "应急响应程序",
+      "prompt": "生成各类突发事件的响应流程与防控措施。",
+      "variables": ["incident_types", "response_steps"]
+    },
+    {
+      "id": "7",
+      "title": "信息报告与后期处置",
+      "prompt": "生成事故报告程序与善后措施。",
+      "variables": []
+    },
+    {
+      "id": "8",
+      "title": "附录",
+      "prompt": "生成附录部分，包括表格、清单、联系方式等。",
+      "variables": ["appendices"]
+    }
+  ]
+}
