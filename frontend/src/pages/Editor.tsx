@@ -5,6 +5,7 @@ import StarterKit from '@tiptap/starter-kit'
 import Image from '@tiptap/extension-image'
 import Placeholder from '@tiptap/extension-placeholder'
 import TextAlign from '@tiptap/extension-text-align'
+// 尝试使用默认导入（TipTap v3的标准方式）
 import Table from '@tiptap/extension-table'
 import TableRow from '@tiptap/extension-table-row'
 import TableCell from '@tiptap/extension-table-cell'
@@ -57,6 +58,9 @@ export default function EditorPage() {
   // 评论面板状态
   const [showComments, setShowComments] = useState(false)
 
+  // 自动保存重试计数
+  const [autoSaveRetryCount, setAutoSaveRetryCount] = useState(0)
+
   // TipTap 编辑器
   const editor = useEditor({
     extensions: [
@@ -104,20 +108,27 @@ export default function EditorPage() {
     }
   }, [id, templateId])
 
-  // 自动保存（每30秒）
+  // 优化的自动保存机制（防抖 + 智能触发）
   useEffect(() => {
-    let autoSaveTimer: NodeJS.Timeout
+    let debounceTimer: NodeJS.Timeout
+    let maxWaitTimer: NodeJS.Timeout
 
     if (hasUnsavedChanges && currentDoc && editor) {
-      autoSaveTimer = setTimeout(() => {
+      // 防抖：用户停止输入3秒后自动保存
+      debounceTimer = setTimeout(() => {
         handleAutoSave()
-      }, 30000) // 30秒自动保存
+      }, 3000)
+
+      // 最大等待时间：即使用户一直在输入，30秒后也强制保存
+      maxWaitTimer = setTimeout(() => {
+        clearTimeout(debounceTimer)
+        handleAutoSave()
+      }, 30000)
     }
 
     return () => {
-      if (autoSaveTimer) {
-        clearTimeout(autoSaveTimer)
-      }
+      if (debounceTimer) clearTimeout(debounceTimer)
+      if (maxWaitTimer) clearTimeout(maxWaitTimer)
     }
   }, [hasUnsavedChanges, currentDoc, editor])
 
@@ -229,8 +240,11 @@ export default function EditorPage() {
     }
   }
 
-  const handleAutoSave = useCallback(async () => {
+  const handleAutoSave = useCallback(async (retryCount = 0) => {
     if (!currentDoc || !hasUnsavedChanges || !editor) return
+
+    // 如果正在保存中，跳过本次保存
+    if (saving) return
 
     try {
       setSaving(true)
@@ -241,21 +255,39 @@ export default function EditorPage() {
         version: currentDoc.version
       })
 
+      // 保存成功
       setCurrentDoc({ ...currentDoc, version: currentDoc.version + 1 })
       setLastSaved(new Date())
       setHasUnsavedChanges(false)
       setSaveStatus('saved')
+      setAutoSaveRetryCount(0) // 重置重试计数
+      setError(null) // 清除错误
     } catch (error: any) {
       console.error('自动保存失败:', error)
       setSaveStatus('error')
 
+      // 版本冲突
       if (error.response?.status === 409) {
-        alert('文档已被其他用户修改，请刷新页面获取最新版本')
+        setError('文档已被其他用户修改')
+        // 不再自动重试，需要用户手动刷新
+      }
+      // 网络错误或服务器错误 - 尝试重试
+      else if (retryCount < 3) {
+        console.log(`自动保存失败，${3 - retryCount}秒后重试...`)
+        setError(`保存失败，将在${3 - retryCount}秒后重试`)
+        setAutoSaveRetryCount(retryCount + 1)
+
+        // 指数退避重试：3秒、6秒、12秒
+        setTimeout(() => {
+          handleAutoSave(retryCount + 1)
+        }, 3000 * Math.pow(2, retryCount))
+      } else {
+        setError('自动保存失败，请检查网络连接后手动保存')
       }
     } finally {
       setSaving(false)
     }
-  }, [currentDoc, editor, hasUnsavedChanges])
+  }, [currentDoc, editor, hasUnsavedChanges, saving])
 
   const handleSave = async () => {
     if (!editor) return
