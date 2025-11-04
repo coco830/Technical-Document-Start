@@ -17,17 +17,20 @@ from ..models.user import User
 from ..utils.auth import get_current_user
 from ..prompts.template_loader import TemplateLoader
 from ..prompts.template_validator import TemplateValidator
+from ..services.cache_service import get_cache_service
+from ..services.ai_service import get_ai_service
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/ai", tags=["AI生成"])
 
-# 初始化模板加载器和验证器
+# 初始化服务
 template_loader = TemplateLoader()
 validator = TemplateValidator()
+cache_service = get_cache_service()
+ai_service = get_ai_service()
 
-# 简单的内存缓存（生产环境建议使用 Redis）
-generation_cache: Dict[str, Dict] = {}
+# 限流缓存（仍使用内存，因为需要精确的时间控制）
 rate_limit_cache: Dict[int, List[datetime]] = {}
 
 
@@ -115,49 +118,6 @@ def _check_rate_limit(user_id: int, max_requests: int = 10, window_minutes: int 
     return True
 
 
-def _mock_ai_generation(prompt: str, ai_config: Dict) -> str:
-    """
-    模拟 AI 生成（实际应用中替换为真实的 AI API 调用）
-
-    Args:
-        prompt: Prompt 文本
-        ai_config: AI 配置
-
-    Returns:
-        生成的文本
-    """
-    # TODO: 集成真实的 AI API（OpenAI, Claude, 通义千问等）
-    # 示例：
-    # import openai
-    # response = openai.ChatCompletion.create(
-    #     model=ai_config.get("model", "gpt-3.5-turbo"),
-    #     messages=[{"role": "user", "content": prompt}],
-    #     temperature=ai_config.get("temperature", 0.7),
-    #     max_tokens=ai_config.get("max_tokens", 2000)
-    # )
-    # return response.choices[0].message.content
-
-    logger.info(f"模拟 AI 生成，Prompt 长度: {len(prompt)}")
-
-    # 返回模拟内容
-    return f"""
-根据您提供的信息，本章节内容如下：
-
-【这是 AI 生成的模拟内容】
-
-本节详细阐述了相关要求和规范，确保符合国家标准和行业最佳实践。
-
-主要内容包括：
-1. 基本原则和指导思想
-2. 具体实施方案和流程
-3. 责任分工和协调机制
-4. 监督检查和持续改进
-
-（注：实际部署时需要接入真实的 AI 模型 API）
-
-Prompt 预览:
-{prompt[:200]}...
-"""
 
 
 @router.get("/templates", response_model=List[TemplateInfo])
@@ -283,18 +243,16 @@ async def generate_content(
                 request.data
             )
 
-            if cache_key in generation_cache:
-                cached_item = generation_cache[cache_key]
-                # 检查缓存是否过期
-                ttl = cache_config.get("ttl", 3600)
-                if (datetime.now() - cached_item["timestamp"]).seconds < ttl:
-                    logger.info(f"从缓存返回结果: {cache_key}")
-                    return GenerationResponse(
-                        success=True,
-                        content=cached_item["content"],
-                        section_title=section_title,
-                        cached=True
-                    )
+            # 使用新的缓存服务
+            cached_item = cache_service.get(cache_key)
+            if cached_item:
+                logger.info(f"从缓存返回结果: {cache_key}")
+                return GenerationResponse(
+                    success=True,
+                    content=cached_item["content"],
+                    section_title=section_title,
+                    cached=True
+                )
 
         # 5. 渲染 Prompt
         prompt = template_loader.render_prompt(
@@ -309,19 +267,28 @@ async def generate_content(
                 error="Prompt 渲染失败"
             )
 
-        # 6. 调用 AI 生成
+        # 6. 调用 AI 生成（带重试机制）
         ai_config = template_loader.get_ai_config(request.template_id)
-        generated_content = _mock_ai_generation(prompt, ai_config)
+        try:
+            generated_content = ai_service.generate(prompt, ai_config)
+        except Exception as e:
+            logger.error(f"AI 生成失败: {e}")
+            return GenerationResponse(
+                success=False,
+                error=f"AI 生成失败: {str(e)}"
+            )
 
         # 7. 清理输出
         cleaned_content = validator.sanitize_output(generated_content)
 
         # 8. 缓存结果
         if cache_key and cache_config.get("enabled", False):
-            generation_cache[cache_key] = {
-                "content": cleaned_content,
-                "timestamp": datetime.now()
-            }
+            ttl = cache_config.get("ttl", 3600)
+            cache_service.set(
+                cache_key,
+                {"content": cleaned_content},
+                ttl
+            )
 
         logger.info(
             f"用户 {current_user.id} 成功生成内容: "
@@ -356,6 +323,26 @@ async def clear_cache(
         清除结果
     """
     # TODO: 添加管理员权限检查
-    generation_cache.clear()
-    logger.info(f"用户 {current_user.id} 清除了生成缓存")
-    return {"success": True, "message": "缓存已清除"}
+    success = cache_service.clear()
+    if success:
+        logger.info(f"用户 {current_user.id} 清除了生成缓存")
+        return {"success": True, "message": "缓存已清除"}
+    else:
+        return {"success": False, "message": "缓存清除失败"}
+
+
+@router.get("/cache/stats")
+async def get_cache_stats(
+    current_user: User = Depends(get_current_user)
+):
+    """
+    获取缓存统计信息
+
+    Returns:
+        缓存统计
+    """
+    stats = cache_service.get_stats()
+    return {
+        "success": True,
+        "stats": stats
+    }
