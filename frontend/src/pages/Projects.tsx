@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { apiClient } from '@/utils/api'
+import Layout from '@/components/Layout'
 
 interface Project {
   id: number
@@ -144,140 +145,119 @@ export default function Projects() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* 导航栏 */}
-      <nav className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <h1
-                className="text-2xl font-bold text-primary cursor-pointer"
-                onClick={() => navigate('/dashboard')}
-              >
-                悦恩人机共写平台
-              </h1>
-            </div>
-          </div>
+    <Layout
+      title="项目管理"
+      actions={
+        <button
+          onClick={() => setIsCreateModalOpen(true)}
+          className="bg-primary text-white px-6 py-2 rounded-md hover:bg-green-700 transition-colors"
+        >
+          + 新建项目
+        </button>
+      }
+    >
+      {/* 搜索和过滤 */}
+      <div className="mb-6 flex gap-4">
+        <input
+          type="text"
+          placeholder="搜索项目标题或描述..."
+          value={search}
+          onChange={handleSearchChange}
+          className="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+        />
+        <select
+          value={statusFilter}
+          onChange={handleStatusFilterChange}
+          className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+        >
+          <option value="">所有状态</option>
+          <option value="active">进行中</option>
+          <option value="completed">已完成</option>
+          <option value="archived">已归档</option>
+        </select>
+      </div>
+
+      {/* 统计信息 */}
+      <div className="mb-4 text-gray-600">
+        共 {total} 个项目
+      </div>
+
+      {/* 错误提示 */}
+      {error && (
+        <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 rounded-md">
+          {error}
         </div>
-      </nav>
+      )}
 
-      {/* 主内容 */}
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          {/* 标题和新建按钮 */}
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-3xl font-bold">项目管理</h2>
-            <button
-              onClick={() => setIsCreateModalOpen(true)}
-              className="bg-primary text-white px-6 py-2 rounded-md hover:bg-green-700 transition-colors"
-            >
-              + 新建项目
-            </button>
-          </div>
-
-          {/* 搜索和过滤 */}
-          <div className="mb-6 flex gap-4">
-            <input
-              type="text"
-              placeholder="搜索项目标题或描述..."
-              value={search}
-              onChange={handleSearchChange}
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-            />
-            <select
-              value={statusFilter}
-              onChange={handleStatusFilterChange}
-              className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-            >
-              <option value="">所有状态</option>
-              <option value="active">进行中</option>
-              <option value="completed">已完成</option>
-              <option value="archived">已归档</option>
-            </select>
-          </div>
-
-          {/* 统计信息 */}
-          <div className="mb-4 text-gray-600">
-            共 {total} 个项目
-          </div>
-
-          {/* 错误提示 */}
-          {error && (
-            <div className="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 rounded-md">
-              {error}
-            </div>
-          )}
-
-          {/* 项目列表 */}
-          {loading ? (
-            <div className="text-center py-12">
-              <p className="text-gray-500 text-lg">加载中...</p>
-            </div>
-          ) : projects.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-gray-500 text-lg">
-                {search || statusFilter ? '没有找到匹配的项目' : '暂无项目，点击上方按钮创建您的第一个项目'}
-              </p>
-            </div>
-          ) : (
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {projects.map((project) => (
-                  <div key={project.id} className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
-                    <div className="flex justify-between items-start mb-3">
-                      <h3 className="text-xl font-semibold flex-1">{project.title}</h3>
-                      {getStatusBadge(project.status)}
-                    </div>
-                    <p className="text-gray-600 mb-4 line-clamp-2">
-                      {project.description || '暂无描述'}
-                    </p>
-                    <p className="text-sm text-gray-400 mb-4">
-                      创建于: {new Date(project.created_at).toLocaleDateString('zh-CN')}
-                    </p>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => navigate(`/editor/${project.id}`)}
-                        className="flex-1 bg-primary text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors"
-                      >
-                        打开项目
-                      </button>
-                      <button
-                        onClick={() => deleteProject(project.id, project.title)}
-                        className="px-4 py-2 border border-red-300 text-red-600 rounded-md hover:bg-red-50 transition-colors"
-                      >
-                        删除
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* 分页 */}
-              {totalPages > 1 && (
-                <div className="mt-8 flex justify-center gap-2">
+      {/* 项目列表 */}
+      {loading ? (
+        <div className="text-center py-12">
+          <p className="text-gray-500 text-lg">加载中...</p>
+        </div>
+      ) : projects.length === 0 ? (
+        <div className="text-center py-12">
+          <p className="text-gray-500 text-lg">
+            {search || statusFilter ? '没有找到匹配的项目' : '暂无项目，点击上方按钮创建您的第一个项目'}
+          </p>
+        </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {projects.map((project) => (
+              <div key={project.id} className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
+                <div className="flex justify-between items-start mb-3">
+                  <h3 className="text-xl font-semibold flex-1">{project.title}</h3>
+                  {getStatusBadge(project.status)}
+                </div>
+                <p className="text-gray-600 mb-4 line-clamp-2">
+                  {project.description || '暂无描述'}
+                </p>
+                <p className="text-sm text-gray-400 mb-4">
+                  创建于: {new Date(project.created_at).toLocaleDateString('zh-CN')}
+                </p>
+                <div className="flex gap-2">
                   <button
-                    onClick={() => setPage(page - 1)}
-                    disabled={page === 1}
-                    className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={() => navigate(`/editor/${project.id}`)}
+                    className="flex-1 bg-primary text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors"
                   >
-                    上一页
+                    打开项目
                   </button>
-                  <span className="px-4 py-2">
-                    第 {page} / {totalPages} 页
-                  </span>
                   <button
-                    onClick={() => setPage(page + 1)}
-                    disabled={page === totalPages}
-                    className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={() => deleteProject(project.id, project.title)}
+                    className="px-4 py-2 border border-red-300 text-red-600 rounded-md hover:bg-red-50 transition-colors"
                   >
-                    下一页
+                    删除
                   </button>
                 </div>
-              )}
-            </>
+              </div>
+            ))}
+          </div>
+
+          {/* 分页 */}
+          {totalPages > 1 && (
+            <div className="mt-8 flex justify-center gap-2">
+              <button
+                onClick={() => setPage(page - 1)}
+                disabled={page === 1}
+                className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                上一页
+              </button>
+              <span className="px-4 py-2">
+                第 {page} / {totalPages} 页
+              </span>
+              <button
+                onClick={() => setPage(page + 1)}
+                disabled={page === totalPages}
+                className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                下一页
+              </button>
+            </div>
           )}
-        </div>
-      </main>
+        </>
+      )}
+
 
       {/* 创建项目模态框 */}
       {isCreateModalOpen && (
@@ -346,6 +326,6 @@ export default function Projects() {
           </div>
         </div>
       )}
-    </div>
+    </Layout>
   )
 }

@@ -11,7 +11,7 @@ interface Document {
   content_type: string
   project_id: number | null
   user_id: number
-  version: int
+  version: number
   is_template: number
   metadata: Record<string, any> | null
   created_at: string
@@ -203,12 +203,12 @@ export default function EditorPage() {
     // 导出为 HTML 文件
     const blob = new Blob([content], { type: 'text/html' })
     const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
+    const a = window.document.createElement('a')
     a.href = url
     a.download = `${title || '未命名文档'}.html`
-    document.body.appendChild(a)
+    window.document.body.appendChild(a)
     a.click()
-    document.body.removeChild(a)
+    window.document.body.removeChild(a)
     URL.revokeObjectURL(url)
   }
 

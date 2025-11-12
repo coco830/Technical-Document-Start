@@ -1,11 +1,12 @@
 from fastapi import APIRouter, HTTPException, status, Depends, Query, File, UploadFile
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import or_
 from typing import Optional
 from app.database import get_db
 from app.models.user import User
 from app.models.document import Document
 from app.models.project import Project
+from app.models.comment import Comment
 from app.schemas.document import (
     DocumentCreate,
     DocumentUpdate,
@@ -15,11 +16,17 @@ from app.schemas.document import (
     MessageResponse
 )
 from app.utils.auth import get_current_user
+from app.utils.file_validator import validate_uploaded_file, scan_file_security, FileValidationError
+from app.utils.pagination import PaginationParams, optimize_offset_pagination, search_optimized_pagination
 import math
 import os
 import uuid
 import shutil
+import logging
 from pathlib import Path
+
+# 配置日志
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/documents", tags=["文档管理"])
 
@@ -42,8 +49,11 @@ async def get_documents(
     - **project_id**: 可选的项目ID过滤
     - **is_template**: 可选的模板过滤（0: 普通文档, 1: 模板）
     """
-    # 构建基础查询
-    query = db.query(Document).filter(Document.user_id == current_user.id)
+    # 构建基础查询，使用eager loading避免N+1问题
+    query = db.query(Document).options(
+        joinedload(Document.project),  # 预加载关联的项目
+        joinedload(Document.user)      # 预加载关联的用户
+    ).filter(Document.user_id == current_user.id)
 
     # 项目过滤
     if project_id is not None:
@@ -68,28 +78,30 @@ async def get_documents(
             )
         query = query.filter(Document.is_template == is_template)
 
-    # 搜索功能
+    # 创建分页参数
+    pagination = PaginationParams(page=page, page_size=page_size)
+    
+    # 使用优化的分页查询
     if search:
-        query = query.filter(Document.title.ilike(f"%{search}%"))
-
-    # 获取总数
-    total = query.count()
-
-    # 计算总页数
-    total_pages = math.ceil(total / page_size) if total > 0 else 1
-
-    # 分页查询（按更新时间倒序）
-    documents = query.order_by(Document.updated_at.desc())\
-                    .offset((page - 1) * page_size)\
-                    .limit(page_size)\
-                    .all()
+        # 搜索优化的分页
+        result = search_optimized_pagination(
+            query=query,
+            search_term=search,
+            search_fields=['title'],
+            pagination=pagination,
+            db=db
+        )
+    else:
+        # 普通优化的分页
+        query = query.order_by(Document.updated_at.desc())
+        result = optimize_offset_pagination(query, pagination, db)
 
     return DocumentListResponse(
-        documents=[DocumentResponse.model_validate(d) for d in documents],
-        total=total,
-        page=page,
-        page_size=page_size,
-        total_pages=total_pages
+        documents=[DocumentResponse.model_validate(d) for d in result.items],
+        total=result.total,
+        page=result.page,
+        page_size=result.page_size,
+        total_pages=result.total_pages
     )
 
 @router.post("/", response_model=DocumentResponse, status_code=status.HTTP_201_CREATED)
@@ -155,7 +167,11 @@ async def get_document(
 
     - **document_id**: 文档ID
     """
-    document = db.query(Document).filter(
+    document = db.query(Document).options(
+        joinedload(Document.project),  # 预加载关联的项目
+        joinedload(Document.user),     # 预加载关联的用户
+        joinedload(Document.comments)  # 预加载关联的评论
+    ).filter(
         Document.id == document_id,
         Document.user_id == current_user.id
     ).first()
@@ -187,7 +203,10 @@ async def update_document(
     - **metadata**: 元数据（可选）
     """
     # 查找文档
-    document = db.query(Document).filter(
+    document = db.query(Document).options(
+        joinedload(Document.project),  # 预加载关联的项目
+        joinedload(Document.user)      # 预加载关联的用户
+    ).filter(
         Document.id == document_id,
         Document.user_id == current_user.id
     ).first()
@@ -250,7 +269,10 @@ async def autosave_document(
     - **version**: 当前版本号（用于乐观锁）
     """
     # 查找文档
-    document = db.query(Document).filter(
+    document = db.query(Document).options(
+        joinedload(Document.project),  # 预加载关联的项目
+        joinedload(Document.user)      # 预加载关联的用户
+    ).filter(
         Document.id == document_id,
         Document.user_id == current_user.id
     ).first()
@@ -298,7 +320,10 @@ async def delete_document(
     - **document_id**: 文档ID
     """
     # 查找文档
-    document = db.query(Document).filter(
+    document = db.query(Document).options(
+        joinedload(Document.project),  # 预加载关联的项目
+        joinedload(Document.user)      # 预加载关联的用户
+    ).filter(
         Document.id == document_id,
         Document.user_id == current_user.id
     ).first()
@@ -340,7 +365,10 @@ async def create_from_template(
     - **project_id**: 所属项目ID（可选）
     """
     # 查找模板
-    template = db.query(Document).filter(
+    template = db.query(Document).options(
+        joinedload(Document.project),  # 预加载关联的项目
+        joinedload(Document.user)      # 预加载关联的用户
+    ).filter(
         Document.id == template_id,
         Document.user_id == current_user.id,
         Document.is_template == 1
@@ -399,54 +427,80 @@ async def upload_image(
     - **file**: 图片文件（支持 jpg, jpeg, png, gif, webp）
     - 返回图片访问URL
     """
-    # 验证文件类型
-    allowed_types = ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"]
-    if file.content_type not in allowed_types:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"不支持的文件类型: {file.content_type}，仅支持 jpg, jpeg, png, gif, webp"
-        )
-
-    # 验证文件大小 (限制为 5MB)
-    file_size = 0
-    chunk_size = 1024 * 1024  # 1MB chunks
-
-    # 读取文件并检查大小
-    contents = await file.read()
-    file_size = len(contents)
-
-    if file_size > 5 * 1024 * 1024:  # 5MB
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="文件大小不能超过 5MB"
-        )
-
-    # 生成唯一文件名
-    file_extension = Path(file.filename).suffix
-    unique_filename = f"{uuid.uuid4()}{file_extension}"
-
-    # 确保上传目录存在
-    upload_dir = Path("uploads/images")
-    upload_dir.mkdir(parents=True, exist_ok=True)
-
-    # 保存文件
-    file_path = upload_dir / unique_filename
-
+    # 记录上传尝试
+    logger.info(f"用户 {current_user.id} 尝试上传文件: {file.filename}, 声明类型: {file.content_type}")
+    
     try:
-        with open(file_path, "wb") as buffer:
-            buffer.write(contents)
+        # 读取文件内容
+        contents = await file.read()
+        
+        # 使用文件验证器进行安全验证
+        validation_result = validate_uploaded_file(
+            file_content=contents,
+            filename=file.filename,
+            content_type=file.content_type
+        )
+        
+        # 验证是否为图片类型
+        if not file.content_type.startswith('image/'):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"只允许上传图片文件，当前类型: {file.content_type}"
+            )
+        
+        # 扫描文件安全性
+        if not scan_file_security(contents):
+            logger.warning(f"检测到用户 {current_user.id} 上传的文件 {file.filename} 包含可疑内容")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="文件包含不安全内容，上传被拒绝"
+            )
+        
+        # 生成唯一文件名，使用验证后的扩展名
+        file_extension = validation_result['extension']
+        unique_filename = f"{uuid.uuid4()}{file_extension}"
+
+        # 确保上传目录存在
+        upload_dir = Path("uploads/images")
+        upload_dir.mkdir(parents=True, exist_ok=True)
+
+        # 保存文件
+        file_path = upload_dir / unique_filename
+
+        try:
+            with open(file_path, "wb") as buffer:
+                buffer.write(contents)
+            
+            # 记录成功上传
+            logger.info(f"用户 {current_user.id} 成功上传文件: {unique_filename}, 大小: {len(contents)} bytes")
+            
+        except Exception as e:
+            logger.error(f"文件保存失败: {str(e)}, 用户: {current_user.id}, 文件: {file.filename}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"文件保存失败: {str(e)}"
+            )
+
+        # 返回图片URL
+        image_url = f"/uploads/images/{unique_filename}"
+
+        return {
+            "url": image_url,
+            "filename": unique_filename,
+            "size": len(contents),
+            "content_type": validation_result['content_type'],
+            "description": validation_result['description']
+        }
+        
+    except FileValidationError as e:
+        logger.warning(f"文件验证失败: {str(e)}, 用户: {current_user.id}, 文件: {file.filename}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
     except Exception as e:
+        logger.error(f"文件上传过程中发生未知错误: {str(e)}, 用户: {current_user.id}, 文件: {file.filename}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"文件保存失败: {str(e)}"
+            detail="文件上传过程中发生错误，请稍后重试"
         )
-
-    # 返回图片URL
-    image_url = f"/uploads/images/{unique_filename}"
-
-    return {
-        "url": image_url,
-        "filename": unique_filename,
-        "size": file_size,
-        "content_type": file.content_type
-    }

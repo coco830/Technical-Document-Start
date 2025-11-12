@@ -1,7 +1,15 @@
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.engine import Engine
 import os
+import logging
+
+# 导入查询监控工具
+from app.utils.query_monitor import setup_sqlalchemy_monitoring
+
+# 配置日志
+logger = logging.getLogger(__name__)
 
 # 从环境变量读取数据库URL，默认使用SQLite
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./yueen.db")
@@ -10,6 +18,10 @@ DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./yueen.db")
 # SQLite需要check_same_thread=False以支持多线程
 connect_args = {"check_same_thread": False} if "sqlite" in DATABASE_URL else {}
 engine = create_engine(DATABASE_URL, connect_args=connect_args)
+
+# 设置查询监控
+setup_sqlalchemy_monitoring(engine)
+logger.info("数据库查询监控已启用")
 
 # 创建会话工厂
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -39,3 +51,11 @@ def init_db():
     在main.py启动时调用
     """
     Base.metadata.create_all(bind=engine)
+    logger.info("数据库表初始化完成")
+
+def get_db_stats():
+    """
+    获取数据库查询统计信息
+    """
+    from app.utils.query_monitor import query_monitor
+    return query_monitor.get_stats()

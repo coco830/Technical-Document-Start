@@ -14,7 +14,7 @@ from datetime import datetime, timedelta
 
 from ..database import get_db
 from ..models.user import User
-from ..utils.auth import get_current_user
+from ..utils.auth import get_current_user, get_current_admin_user
 from ..prompts.template_loader import TemplateLoader
 from ..prompts.template_validator import TemplateValidator
 from ..services.cache_service import get_cache_service
@@ -267,10 +267,14 @@ async def generate_content(
                 error="Prompt 渲染失败"
             )
 
-        # 6. 调用 AI 生成（带重试机制）
+        # 6. 调用 AI 生成（带重试机制和使用量统计）
         ai_config = template_loader.get_ai_config(request.template_id)
         try:
-            generated_content = ai_service.generate(prompt, ai_config)
+            generated_content = ai_service.generate(
+                prompt,
+                ai_config,
+                user_id=str(current_user.id)
+            )
         except Exception as e:
             logger.error(f"AI 生成失败: {e}")
             return GenerationResponse(
@@ -314,7 +318,7 @@ async def generate_content(
 
 @router.delete("/cache")
 async def clear_cache(
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_admin_user)
 ):
     """
     清除缓存（仅管理员）
@@ -322,10 +326,9 @@ async def clear_cache(
     Returns:
         清除结果
     """
-    # TODO: 添加管理员权限检查
     success = cache_service.clear()
     if success:
-        logger.info(f"用户 {current_user.id} 清除了生成缓存")
+        logger.info(f"管理员 {current_user.id} 清除了生成缓存")
         return {"success": True, "message": "缓存已清除"}
     else:
         return {"success": False, "message": "缓存清除失败"}
@@ -346,3 +349,39 @@ async def get_cache_stats(
         "success": True,
         "stats": stats
     }
+
+
+@router.get("/usage/stats")
+async def get_usage_stats(
+    current_user: User = Depends(get_current_user)
+):
+    """
+    获取AI使用量统计信息
+
+    Returns:
+        AI使用量统计
+    """
+    try:
+        # 获取用户个人使用量
+        user_usage = ai_service.get_user_usage(str(current_user.id))
+        
+        # 如果是管理员，获取全局统计
+        global_stats = None
+        if current_user.is_admin:
+            global_stats = ai_service.get_usage_stats()
+        
+        logger.info(f"用户 {current_user.id} 查询使用量统计")
+        
+        return {
+            "success": True,
+            "user_usage": user_usage,
+            "global_stats": global_stats,
+            "service_available": ai_service.is_available()
+        }
+        
+    except Exception as e:
+        logger.error(f"获取使用量统计失败: {e}")
+        return {
+            "success": False,
+            "error": f"获取使用量统计失败: {str(e)}"
+        }

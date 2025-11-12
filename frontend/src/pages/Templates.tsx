@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { apiClient } from '@/utils/api'
+import Layout from '@/components/Layout'
 
 interface Document {
   id: number
@@ -113,24 +114,13 @@ export default function Templates() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* 顶部导航栏 */}
-      <header className="bg-white shadow-sm border-b sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => navigate('/dashboard')}
-              className="text-gray-600 hover:text-gray-900"
-            >
-              ← 返回
-            </button>
-            <h1 className="text-2xl font-bold text-gray-900">模板库</h1>
-            <span className="text-sm text-gray-500">共 {total} 个模板</span>
-          </div>
-        </div>
-      </header>
-
-      <div className="max-w-7xl mx-auto px-4 py-8">
+    <Layout
+      title="模板库"
+      showBackButton={true}
+    >
+      <div className="mb-4 text-gray-600">
+        共 {total} 个模板
+      </div>
         {/* 筛选和搜索栏 */}
         <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
           <div className="flex flex-col md:flex-row gap-4">
@@ -263,7 +253,6 @@ export default function Templates() {
             </button>
           </div>
         )}
-      </div>
 
       {/* 预览模态框 */}
       {previewTemplate && (
@@ -326,6 +315,6 @@ export default function Templates() {
           </div>
         </div>
       )}
-    </div>
+    </Layout>
   )
 }

@@ -8,10 +8,12 @@ import TextAlign from '@tiptap/extension-text-align'
 // TipTap v3 使用命名导出而不是默认导出
 import { Table, TableRow, TableCell, TableHeader } from '@tiptap/extension-table'
 import { apiClient } from '@/utils/api'
+import { exportDocument } from '@/utils/export'
 import EditorBubbleMenu from '@/components/EditorBubbleMenu'
 import OutlineSidebar from '@/components/OutlineSidebar'
 import SaveStatusIndicator from '@/components/SaveStatusIndicator'
 import CommentsPanel from '@/components/CommentsPanel'
+import Layout from '@/components/Layout'
 import './Editor.css'
 
 interface Document {
@@ -56,7 +58,11 @@ export default function EditorPage() {
   const [showComments, setShowComments] = useState(false)
 
   // 自动保存重试计数
-  const [autoSaveRetryCount, setAutoSaveRetryCount] = useState(0)
+  // const [autoSaveRetryCount, setAutoSaveRetryCount] = useState(0)
+
+  // 导出状态
+  const [exporting, setExporting] = useState(false)
+  const [showExportMenu, setShowExportMenu] = useState(false)
 
   // TipTap 编辑器
   const editor = useEditor({
@@ -88,7 +94,7 @@ export default function EditorPage() {
         class: 'prose prose-sm sm:prose lg:prose-lg xl:prose-xl mx-auto focus:outline-none min-h-[500px] px-8 py-6',
       },
     },
-    onUpdate: ({ editor }) => {
+    onUpdate: () => {
       setHasUnsavedChanges(true)
       setSaveStatus('unsaved')
     },
@@ -157,6 +163,21 @@ export default function EditorPage() {
     window.document.addEventListener('keydown', handleKeyDown)
     return () => window.document.removeEventListener('keydown', handleKeyDown)
   }, [currentDoc, title, editor])
+
+  // 关闭导出菜单（点击外部）
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement
+      if (showExportMenu && !target.closest('.relative')) {
+        setShowExportMenu(false)
+      }
+    }
+
+    if (showExportMenu) {
+      window.document.addEventListener('click', handleClickOutside)
+      return () => window.document.removeEventListener('click', handleClickOutside)
+    }
+  }, [showExportMenu])
 
   // 提取文档大纲
   const outline = useMemo(() => {
@@ -260,7 +281,7 @@ export default function EditorPage() {
       setLastSaved(new Date())
       setHasUnsavedChanges(false)
       setSaveStatus('saved')
-      setAutoSaveRetryCount(0) // 重置重试计数
+      // setAutoSaveRetryCount(0) // 重置重试计数
       setError(null) // 清除错误
     } catch (error: any) {
       console.error('自动保存失败:', error)
@@ -275,7 +296,7 @@ export default function EditorPage() {
       else if (retryCount < 3) {
         console.log(`自动保存失败，${3 - retryCount}秒后重试...`)
         setError(`保存失败，将在${3 - retryCount}秒后重试`)
-        setAutoSaveRetryCount(retryCount + 1)
+        // setAutoSaveRetryCount(retryCount + 1)
 
         // 指数退避重试：3秒、6秒、12秒
         setTimeout(() => {
@@ -339,6 +360,40 @@ export default function EditorPage() {
       alert(error.response?.data?.detail || '保存失败')
     } finally {
       setSaving(false)
+    }
+  }
+
+  // 导出文档处理函数
+  const handleExport = async (format: 'pdf' | 'docx') => {
+    if (!currentDoc) {
+      alert('请先保存文档后再导出')
+      return
+    }
+
+    // 如果有未保存的更改，提示用户
+    if (hasUnsavedChanges) {
+      const confirmed = window.confirm('文档有未保存的更改，是否先保存后再导出？')
+      if (confirmed) {
+        await handleSave()
+      }
+    }
+
+    try {
+      setExporting(true)
+      setShowExportMenu(false)
+
+      await exportDocument({
+        documentId: currentDoc.id,
+        format,
+        includeMetadata: true,
+      })
+
+      alert(`文档已成功导出为 ${format.toUpperCase()} 格式`)
+    } catch (error: any) {
+      console.error('导出失败:', error)
+      alert(error.message || `导出 ${format.toUpperCase()} 失败，请稍后重试`)
+    } finally {
+      setExporting(false)
     }
   }
 
@@ -455,306 +510,313 @@ export default function EditorPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* 顶部工具栏 */}
-      <div className="bg-white shadow-sm border-b sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            {/* 左侧 */}
-            <div className="flex items-center space-x-4 flex-1 min-w-0">
-              <button
-                onClick={() => navigate('/projects')}
-                className="text-gray-600 hover:text-primary flex-shrink-0"
-                title="返回项目列表"
-              >
-                ← 返回
-              </button>
-              <input
-                type="text"
-                value={title}
-                onChange={(e) => {
-                  setTitle(e.target.value)
-                  setHasUnsavedChanges(true)
-                }}
-                className="text-xl font-semibold border-none focus:outline-none focus:ring-2 focus:ring-primary px-2 py-1 rounded flex-1 min-w-0"
-                placeholder="输入文档标题..."
-              />
-              <SaveStatusIndicator status={saveStatus} lastSaved={lastSaved} />
-            </div>
+    <Layout
+      title={title || '未命名文档'}
+      showBackButton={true}
+      actions={
+        <div className="flex items-center space-x-2">
+          <div className="text-sm text-gray-600 hidden md:block">
+            {getWordCount()} 字
+          </div>
+          <button
+            onClick={fetchTemplates}
+            className="px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors text-sm"
+            title="从模板创建"
+          >
+            📋 模板
+          </button>
+          <button
+            onClick={() => setShowTemplateSettings(true)}
+            className={`px-3 py-2 border rounded-md transition-colors text-sm ${
+              isTemplate
+                ? 'border-primary bg-primary/10 text-primary hover:bg-primary/20'
+                : 'border-gray-300 hover:bg-gray-50'
+            }`}
+            title={isTemplate ? '已标记为模板' : '设为模板'}
+          >
+            ⚙️ {isTemplate ? '模板设置' : '设为模板'}
+          </button>
+          <button
+            onClick={() => setShowComments(!showComments)}
+            className={`px-3 py-2 border rounded-md transition-colors text-sm ${
+              showComments
+                ? 'border-primary bg-primary/10 text-primary hover:bg-primary/20'
+                : 'border-gray-300 hover:bg-gray-50'
+            }`}
+            title="评论与批注"
+            disabled={!currentDoc}
+          >
+            💬 评论
+          </button>
 
-            {/* 右侧按钮 */}
-            <div className="flex items-center space-x-2 flex-shrink-0 ml-4">
-              <div className="text-sm text-gray-600 hidden md:block">
-                {getWordCount()} 字
+          {/* 导出按钮 */}
+          <div className="relative">
+            <button
+              onClick={() => setShowExportMenu(!showExportMenu)}
+              disabled={!currentDoc || exporting}
+              className="px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              title="导出文档"
+            >
+              {exporting ? '导出中...' : '📥 导出'}
+            </button>
+
+            {/* 导出格式下拉菜单 */}
+            {showExportMenu && (
+              <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-10">
+                <div className="py-1">
+                  <button
+                    onClick={() => handleExport('pdf')}
+                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    📄 导出为 PDF
+                  </button>
+                  <button
+                    onClick={() => handleExport('docx')}
+                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    📝 导出为 Word
+                  </button>
+                </div>
               </div>
+            )}
+          </div>
+
+          <button
+            onClick={handleSave}
+            disabled={saving || !title.trim()}
+            className="bg-primary text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+          >
+            {saving ? '保存中...' : currentDoc ? '💾 保存' : '✨ 创建'}
+          </button>
+        </div>
+      }
+    >
+      {/* 编辑器工具栏 */}
+      {editor && (
+        <div className="bg-white shadow-sm border-b sticky top-0 z-10">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
+            <div className="flex items-center space-x-1 flex-nowrap">
+              {/* 文本样式 */}
               <button
-                onClick={fetchTemplates}
-                className="px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors text-sm"
-                title="从模板创建"
+                onClick={() => editor.chain().focus().toggleBold().run()}
+                className={`p-2 rounded hover:bg-gray-200 ${editor.isActive('bold') ? 'bg-gray-200' : ''}`}
+                title="粗体 (Ctrl+B)"
               >
-                📋 模板
+                <strong>B</strong>
               </button>
               <button
-                onClick={() => setShowTemplateSettings(true)}
-                className={`px-3 py-2 border rounded-md transition-colors text-sm ${
-                  isTemplate
-                    ? 'border-primary bg-primary/10 text-primary hover:bg-primary/20'
-                    : 'border-gray-300 hover:bg-gray-50'
-                }`}
-                title={isTemplate ? '已标记为模板' : '设为模板'}
+                onClick={() => editor.chain().focus().toggleItalic().run()}
+                className={`p-2 rounded hover:bg-gray-200 ${editor.isActive('italic') ? 'bg-gray-200' : ''}`}
+                title="斜体 (Ctrl+I)"
               >
-                ⚙️ {isTemplate ? '模板设置' : '设为模板'}
+                <em>I</em>
               </button>
               <button
-                onClick={() => setShowComments(!showComments)}
-                className={`px-3 py-2 border rounded-md transition-colors text-sm ${
-                  showComments
-                    ? 'border-primary bg-primary/10 text-primary hover:bg-primary/20'
-                    : 'border-gray-300 hover:bg-gray-50'
-                }`}
-                title="评论与批注"
-                disabled={!currentDoc}
+                onClick={() => editor.chain().focus().toggleUnderline().run()}
+                className={`p-2 rounded hover:bg-gray-200 ${editor.isActive('underline') ? 'bg-gray-200' : ''}`}
+                title="下划线 (Ctrl+U)"
               >
-                💬 评论
+                <u>U</u>
               </button>
               <button
-                onClick={handleSave}
-                disabled={saving || !title.trim()}
-                className="bg-primary text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+                onClick={() => editor.chain().focus().toggleStrike().run()}
+                className={`p-2 rounded hover:bg-gray-200 ${editor.isActive('strike') ? 'bg-gray-200' : ''}`}
+                title="删除线"
               >
-                {saving ? '保存中...' : currentDoc ? '💾 保存' : '✨ 创建'}
+                <s>S</s>
+              </button>
+
+              <div className="w-px h-6 bg-gray-300 mx-2"></div>
+
+              {/* 标题 */}
+              {[1, 2, 3].map(level => (
+                <button
+                  key={level}
+                  onClick={() => editor.chain().focus().toggleHeading({ level: level as 1 | 2 | 3 }).run()}
+                  className={`p-2 rounded hover:bg-gray-200 text-sm ${editor.isActive('heading', { level }) ? 'bg-gray-200' : ''}`}
+                  title={`标题 ${level}`}
+                >
+                  H{level}
+                </button>
+              ))}
+
+              <div className="w-px h-6 bg-gray-300 mx-2"></div>
+
+              {/* 列表 */}
+              <button
+                onClick={() => editor.chain().focus().toggleBulletList().run()}
+                className={`p-2 rounded hover:bg-gray-200 ${editor.isActive('bulletList') ? 'bg-gray-200' : ''}`}
+                title="无序列表"
+              >
+                ●
+              </button>
+              <button
+                onClick={() => editor.chain().focus().toggleOrderedList().run()}
+                className={`p-2 rounded hover:bg-gray-200 ${editor.isActive('orderedList') ? 'bg-gray-200' : ''}`}
+                title="有序列表"
+              >
+                1.
+              </button>
+
+              <div className="w-px h-6 bg-gray-300 mx-2"></div>
+
+              {/* 对齐 */}
+              <button
+                onClick={() => editor.chain().focus().setTextAlign('left').run()}
+                className="p-2 rounded hover:bg-gray-200 text-sm"
+                title="左对齐"
+              >
+                ←
+              </button>
+              <button
+                onClick={() => editor.chain().focus().setTextAlign('center').run()}
+                className="p-2 rounded hover:bg-gray-200 text-sm"
+                title="居中"
+              >
+                ↔
+              </button>
+              <button
+                onClick={() => editor.chain().focus().setTextAlign('right').run()}
+                className="p-2 rounded hover:bg-gray-200 text-sm"
+                title="右对齐"
+              >
+                →
+              </button>
+
+              <div className="w-px h-6 bg-gray-300 mx-2"></div>
+
+              {/* 引用和代码 */}
+              <button
+                onClick={() => editor.chain().focus().toggleBlockquote().run()}
+                className={`p-2 rounded hover:bg-gray-200 ${editor.isActive('blockquote') ? 'bg-gray-200' : ''}`}
+                title="引用"
+              >
+                "
+              </button>
+              <button
+                onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+                className={`p-2 rounded hover:bg-gray-200 ${editor.isActive('codeBlock') ? 'bg-gray-200' : ''}`}
+                title="代码块"
+              >
+                &lt;/&gt;
+              </button>
+
+              <div className="w-px h-6 bg-gray-300 mx-2"></div>
+
+              {/* 链接和图片 */}
+              <button
+                onClick={handleAddLink}
+                className="p-2 rounded hover:bg-gray-200"
+                title="插入链接"
+              >
+                🔗
+              </button>
+              <button
+                onClick={handleImageUpload}
+                className="p-2 rounded hover:bg-gray-200"
+                title="插入图片"
+              >
+                🖼️
+              </button>
+              <button
+                onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
+                className="p-2 rounded hover:bg-gray-200"
+                title="插入表格"
+              >
+                📊
+              </button>
+
+              {/* 表格编辑工具 - 只在光标在表格内时显示 */}
+              {editor.isActive('table') && (
+                <>
+                  <div className="w-px h-6 bg-gray-300 mx-2"></div>
+                  <button
+                    onClick={() => editor.chain().focus().addColumnBefore().run()}
+                    className="p-2 rounded hover:bg-gray-200 text-xs"
+                    title="在前面插入列"
+                  >
+                    ⬅️➕
+                  </button>
+                  <button
+                    onClick={() => editor.chain().focus().addColumnAfter().run()}
+                    className="p-2 rounded hover:bg-gray-200 text-xs"
+                    title="在后面插入列"
+                  >
+                    ➕➡️
+                  </button>
+                  <button
+                    onClick={() => editor.chain().focus().deleteColumn().run()}
+                    className="p-2 rounded hover:bg-gray-200 text-xs"
+                    title="删除列"
+                  >
+                    🗑️⬆️
+                  </button>
+                  <button
+                    onClick={() => editor.chain().focus().addRowBefore().run()}
+                    className="p-2 rounded hover:bg-gray-200 text-xs"
+                    title="在上方插入行"
+                  >
+                    ⬆️➕
+                  </button>
+                  <button
+                    onClick={() => editor.chain().focus().addRowAfter().run()}
+                    className="p-2 rounded hover:bg-gray-200 text-xs"
+                    title="在下方插入行"
+                  >
+                    ➕⬇️
+                  </button>
+                  <button
+                    onClick={() => editor.chain().focus().deleteRow().run()}
+                    className="p-2 rounded hover:bg-gray-200 text-xs"
+                    title="删除行"
+                  >
+                    🗑️➡️
+                  </button>
+                  <button
+                    onClick={() => editor.chain().focus().mergeCells().run()}
+                    className="p-2 rounded hover:bg-gray-200 text-xs"
+                    title="合并单元格"
+                  >
+                    ⬜
+                  </button>
+                  <button
+                    onClick={() => editor.chain().focus().splitCell().run()}
+                    className="p-2 rounded hover:bg-gray-200 text-xs"
+                    title="拆分单元格"
+                  >
+                    ⬛
+                  </button>
+                  <button
+                    onClick={() => editor.chain().focus().deleteTable().run()}
+                    className="p-2 rounded hover:bg-red-200 text-red-600 text-xs"
+                    title="删除表格"
+                  >
+                    🗑️
+                  </button>
+                </>
+              )}
+
+              <div className="w-px h-6 bg-gray-300 mx-2"></div>
+
+              {/* 导出 */}
+              <button
+                onClick={handleExportHTML}
+                className="px-3 py-1 text-sm rounded hover:bg-gray-200"
+                title="导出HTML"
+              >
+                HTML
+              </button>
+              <button
+                onClick={handleExportMarkdown}
+                className="px-3 py-1 text-sm rounded hover:bg-gray-200"
+                title="导出Markdown"
+              >
+                MD
               </button>
             </div>
           </div>
         </div>
-
-        {/* 编辑器工具栏 */}
-        {editor && (
-          <div className="border-t bg-gray-50 overflow-x-auto">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
-              <div className="flex items-center space-x-1 flex-nowrap">
-                {/* 文本样式 */}
-                <button
-                  onClick={() => editor.chain().focus().toggleBold().run()}
-                  className={`p-2 rounded hover:bg-gray-200 ${editor.isActive('bold') ? 'bg-gray-200' : ''}`}
-                  title="粗体 (Ctrl+B)"
-                >
-                  <strong>B</strong>
-                </button>
-                <button
-                  onClick={() => editor.chain().focus().toggleItalic().run()}
-                  className={`p-2 rounded hover:bg-gray-200 ${editor.isActive('italic') ? 'bg-gray-200' : ''}`}
-                  title="斜体 (Ctrl+I)"
-                >
-                  <em>I</em>
-                </button>
-                <button
-                  onClick={() => editor.chain().focus().toggleUnderline().run()}
-                  className={`p-2 rounded hover:bg-gray-200 ${editor.isActive('underline') ? 'bg-gray-200' : ''}`}
-                  title="下划线 (Ctrl+U)"
-                >
-                  <u>U</u>
-                </button>
-                <button
-                  onClick={() => editor.chain().focus().toggleStrike().run()}
-                  className={`p-2 rounded hover:bg-gray-200 ${editor.isActive('strike') ? 'bg-gray-200' : ''}`}
-                  title="删除线"
-                >
-                  <s>S</s>
-                </button>
-
-                <div className="w-px h-6 bg-gray-300 mx-2"></div>
-
-                {/* 标题 */}
-                {[1, 2, 3].map(level => (
-                  <button
-                    key={level}
-                    onClick={() => editor.chain().focus().toggleHeading({ level: level as 1 | 2 | 3 }).run()}
-                    className={`p-2 rounded hover:bg-gray-200 text-sm ${editor.isActive('heading', { level }) ? 'bg-gray-200' : ''}`}
-                    title={`标题 ${level}`}
-                  >
-                    H{level}
-                  </button>
-                ))}
-
-                <div className="w-px h-6 bg-gray-300 mx-2"></div>
-
-                {/* 列表 */}
-                <button
-                  onClick={() => editor.chain().focus().toggleBulletList().run()}
-                  className={`p-2 rounded hover:bg-gray-200 ${editor.isActive('bulletList') ? 'bg-gray-200' : ''}`}
-                  title="无序列表"
-                >
-                  ●
-                </button>
-                <button
-                  onClick={() => editor.chain().focus().toggleOrderedList().run()}
-                  className={`p-2 rounded hover:bg-gray-200 ${editor.isActive('orderedList') ? 'bg-gray-200' : ''}`}
-                  title="有序列表"
-                >
-                  1.
-                </button>
-
-                <div className="w-px h-6 bg-gray-300 mx-2"></div>
-
-                {/* 对齐 */}
-                <button
-                  onClick={() => editor.chain().focus().setTextAlign('left').run()}
-                  className="p-2 rounded hover:bg-gray-200 text-sm"
-                  title="左对齐"
-                >
-                  ←
-                </button>
-                <button
-                  onClick={() => editor.chain().focus().setTextAlign('center').run()}
-                  className="p-2 rounded hover:bg-gray-200 text-sm"
-                  title="居中"
-                >
-                  ↔
-                </button>
-                <button
-                  onClick={() => editor.chain().focus().setTextAlign('right').run()}
-                  className="p-2 rounded hover:bg-gray-200 text-sm"
-                  title="右对齐"
-                >
-                  →
-                </button>
-
-                <div className="w-px h-6 bg-gray-300 mx-2"></div>
-
-                {/* 引用和代码 */}
-                <button
-                  onClick={() => editor.chain().focus().toggleBlockquote().run()}
-                  className={`p-2 rounded hover:bg-gray-200 ${editor.isActive('blockquote') ? 'bg-gray-200' : ''}`}
-                  title="引用"
-                >
-                  "
-                </button>
-                <button
-                  onClick={() => editor.chain().focus().toggleCodeBlock().run()}
-                  className={`p-2 rounded hover:bg-gray-200 ${editor.isActive('codeBlock') ? 'bg-gray-200' : ''}`}
-                  title="代码块"
-                >
-                  &lt;/&gt;
-                </button>
-
-                <div className="w-px h-6 bg-gray-300 mx-2"></div>
-
-                {/* 链接和图片 */}
-                <button
-                  onClick={handleAddLink}
-                  className="p-2 rounded hover:bg-gray-200"
-                  title="插入链接"
-                >
-                  🔗
-                </button>
-                <button
-                  onClick={handleImageUpload}
-                  className="p-2 rounded hover:bg-gray-200"
-                  title="插入图片"
-                >
-                  🖼️
-                </button>
-                <button
-                  onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
-                  className="p-2 rounded hover:bg-gray-200"
-                  title="插入表格"
-                >
-                  📊
-                </button>
-
-                {/* 表格编辑工具 - 只在光标在表格内时显示 */}
-                {editor.isActive('table') && (
-                  <>
-                    <div className="w-px h-6 bg-gray-300 mx-2"></div>
-                    <button
-                      onClick={() => editor.chain().focus().addColumnBefore().run()}
-                      className="p-2 rounded hover:bg-gray-200 text-xs"
-                      title="在前面插入列"
-                    >
-                      ⬅️➕
-                    </button>
-                    <button
-                      onClick={() => editor.chain().focus().addColumnAfter().run()}
-                      className="p-2 rounded hover:bg-gray-200 text-xs"
-                      title="在后面插入列"
-                    >
-                      ➕➡️
-                    </button>
-                    <button
-                      onClick={() => editor.chain().focus().deleteColumn().run()}
-                      className="p-2 rounded hover:bg-gray-200 text-xs"
-                      title="删除列"
-                    >
-                      🗑️⬆️
-                    </button>
-                    <button
-                      onClick={() => editor.chain().focus().addRowBefore().run()}
-                      className="p-2 rounded hover:bg-gray-200 text-xs"
-                      title="在上方插入行"
-                    >
-                      ⬆️➕
-                    </button>
-                    <button
-                      onClick={() => editor.chain().focus().addRowAfter().run()}
-                      className="p-2 rounded hover:bg-gray-200 text-xs"
-                      title="在下方插入行"
-                    >
-                      ➕⬇️
-                    </button>
-                    <button
-                      onClick={() => editor.chain().focus().deleteRow().run()}
-                      className="p-2 rounded hover:bg-gray-200 text-xs"
-                      title="删除行"
-                    >
-                      🗑️➡️
-                    </button>
-                    <button
-                      onClick={() => editor.chain().focus().mergeCells().run()}
-                      className="p-2 rounded hover:bg-gray-200 text-xs"
-                      title="合并单元格"
-                    >
-                      ⬜
-                    </button>
-                    <button
-                      onClick={() => editor.chain().focus().splitCell().run()}
-                      className="p-2 rounded hover:bg-gray-200 text-xs"
-                      title="拆分单元格"
-                    >
-                      ⬛
-                    </button>
-                    <button
-                      onClick={() => editor.chain().focus().deleteTable().run()}
-                      className="p-2 rounded hover:bg-red-200 text-red-600 text-xs"
-                      title="删除表格"
-                    >
-                      🗑️
-                    </button>
-                  </>
-                )}
-
-                <div className="w-px h-6 bg-gray-300 mx-2"></div>
-
-                {/* 导出 */}
-                <button
-                  onClick={handleExportHTML}
-                  className="px-3 py-1 text-sm rounded hover:bg-gray-200"
-                  title="导出HTML"
-                >
-                  HTML
-                </button>
-                <button
-                  onClick={handleExportMarkdown}
-                  className="px-3 py-1 text-sm rounded hover:bg-gray-200"
-                  title="导出Markdown"
-                >
-                  MD
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
+      )}
 
       {/* 错误提示 */}
       {error && (
@@ -940,6 +1002,6 @@ export default function EditorPage() {
           </div>
         </div>
       )}
-    </div>
+    </Layout>
   )
 }

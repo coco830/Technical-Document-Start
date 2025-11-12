@@ -14,13 +14,13 @@ fi
 # 启动后端
 echo "📦 启动后端服务..."
 cd backend
-if [ -d "venv" ]; then
-    source venv/bin/activate
+if [ -d ".venv" ]; then
+    source .venv/bin/activate
     uvicorn app.main:app --reload --host 0.0.0.0 --port 8000 &
     BACKEND_PID=$!
     echo "✅ 后端启动成功 (PID: $BACKEND_PID) - http://localhost:8000"
 else
-    echo "⚠️  警告: 后端虚拟环境不存在，请先运行: cd backend && python3 -m venv venv && source venv/bin/activate && pip install -r requirements.txt"
+    echo "⚠️  警告: 后端虚拟环境不存在，请先运行: cd backend && python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt"
 fi
 
 cd ..

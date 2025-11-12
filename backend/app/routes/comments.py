@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, status, Depends
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from typing import List
 from app.database import get_db
 from app.models.user import User
@@ -14,6 +14,10 @@ from app.schemas.comment import (
     MessageResponse
 )
 from app.utils.auth import get_current_user
+import logging
+
+# 配置日志
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/documents", tags=["评论管理"])
 
@@ -30,7 +34,9 @@ async def get_comments(
     - 返回评论列表，包含回复（树形结构）
     """
     # 验证文档是否存在且用户有权访问
-    document = db.query(Document).filter(
+    document = db.query(Document).options(
+        joinedload(Document.user)  # 预加载关联的用户
+    ).filter(
         Document.id == document_id,
         Document.user_id == current_user.id
     ).first()
@@ -41,14 +47,18 @@ async def get_comments(
             detail="文档不存在或无权访问"
         )
 
-    # 获取所有根评论（没有父评论的评论）
-    root_comments = db.query(Comment).filter(
+    # 获取所有根评论（没有父评论的评论），使用eager loading避免N+1问题
+    root_comments = db.query(Comment).options(
+        joinedload(Comment.user)  # 预加载关联的用户
+    ).filter(
         Comment.document_id == document_id,
         Comment.parent_id == None
     ).order_by(Comment.created_at.desc()).all()
 
-    # 获取所有回复
-    all_replies = db.query(Comment).filter(
+    # 获取所有回复，使用eager loading避免N+1问题
+    all_replies = db.query(Comment).options(
+        joinedload(Comment.user)  # 预加载关联的用户
+    ).filter(
         Comment.document_id == document_id,
         Comment.parent_id != None
     ).order_by(Comment.created_at.asc()).all()
@@ -65,6 +75,9 @@ async def get_comments(
         comments_with_replies.append(CommentWithReplies(**comment_dict))
 
     total = len(root_comments)
+    
+    # 记录查询性能
+    logger.info(f"用户 {current_user.id} 查询文档 {document_id} 的评论: 根评论数={total}, 回复数={len(all_replies)}")
 
     return CommentListResponse(
         comments=comments_with_replies,
@@ -89,7 +102,9 @@ async def create_comment(
     - **parent_id**: 回复的父评论ID（可选）
     """
     # 验证文档是否存在且用户有权访问
-    document = db.query(Document).filter(
+    document = db.query(Document).options(
+        joinedload(Document.user)  # 预加载关联的用户
+    ).filter(
         Document.id == document_id,
         Document.user_id == current_user.id
     ).first()
@@ -102,7 +117,9 @@ async def create_comment(
 
     # 如果是回复，验证父评论是否存在
     if comment_data.parent_id:
-        parent_comment = db.query(Comment).filter(
+        parent_comment = db.query(Comment).options(
+            joinedload(Comment.user)  # 预加载关联的用户
+        ).filter(
             Comment.id == comment_data.parent_id,
             Comment.document_id == document_id
         ).first()
@@ -150,7 +167,10 @@ async def update_comment(
     - **content**: 新的评论内容
     """
     # 查找评论
-    comment = db.query(Comment).filter(
+    comment = db.query(Comment).options(
+        joinedload(Comment.user),      # 预加载关联的用户
+        joinedload(Comment.document)   # 预加载关联的文档
+    ).filter(
         Comment.id == comment_id,
         Comment.user_id == current_user.id
     ).first()
@@ -189,7 +209,10 @@ async def delete_comment(
     - 删除评论时，会同时删除所有回复
     """
     # 查找评论
-    comment = db.query(Comment).filter(
+    comment = db.query(Comment).options(
+        joinedload(Comment.user),      # 预加载关联的用户
+        joinedload(Comment.document)   # 预加载关联的文档
+    ).filter(
         Comment.id == comment_id,
         Comment.user_id == current_user.id
     ).first()

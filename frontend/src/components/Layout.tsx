@@ -1,99 +1,125 @@
 import { ReactNode } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useUserStore } from '@/store/userStore'
 
 interface LayoutProps {
   children: ReactNode
-  showNav?: boolean
+  title?: string
+  showBackButton?: boolean
+  actions?: ReactNode
 }
 
-export default function Layout({ children, showNav = true }: LayoutProps) {
+export default function Layout({ children, title, showBackButton = false, actions }: LayoutProps) {
   const navigate = useNavigate()
-  const { token, logout } = useUserStore()
+  const location = useLocation()
+  const { user, logout } = useUserStore()
 
   const handleLogout = () => {
     logout()
     navigate('/login')
   }
 
+  const isActiveRoute = (path: string) => {
+    return location.pathname === path
+  }
+
+  const navItems = [
+    { path: '/dashboard', label: '工作台', icon: '🏠' },
+    { path: '/projects', label: '项目管理', icon: '📁' },
+    { path: '/templates', label: '模板库', icon: '📋' },
+  ]
+
   return (
     <div className="min-h-screen bg-gray-50">
-      {showNav && (
-        <nav className="bg-white shadow-sm border-b border-gray-200">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between h-16">
-              <div className="flex items-center space-x-8">
-                <h1
-                  className="text-2xl font-bold text-primary cursor-pointer hover:text-green-700 transition-colors"
-                  onClick={() => navigate('/')}
+      {/* 顶部导航栏 */}
+      <nav className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-16">
+            {/* 左侧 */}
+            <div className="flex items-center">
+              {showBackButton && (
+                <button
+                  onClick={() => navigate(-1)}
+                  className="mr-4 text-gray-600 hover:text-primary transition-colors"
+                  title="返回"
                 >
-                  🌿 悦恩平台
-                </h1>
-                {token && (
-                  <div className="hidden md:flex space-x-4">
-                    <button
-                      onClick={() => navigate('/dashboard')}
-                      className="text-gray-700 hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                    >
-                      工作台
-                    </button>
-                    <button
-                      onClick={() => navigate('/projects')}
-                      className="text-gray-700 hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                    >
-                      项目列表
-                    </button>
-                    <button
-                      onClick={() => navigate('/editor')}
-                      className="text-gray-700 hover:text-primary px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                    >
-                      编辑器
-                    </button>
-                  </div>
-                )}
-              </div>
-              <div className="flex items-center space-x-4">
-                {token ? (
-                  <>
-                    <span className="text-sm text-gray-600">欢迎回来</span>
-                    <button
-                      onClick={handleLogout}
-                      className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors text-sm font-medium"
-                    >
-                      退出登录
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button
-                      onClick={() => navigate('/login')}
-                      className="text-gray-700 hover:text-primary px-4 py-2 rounded-md text-sm font-medium transition-colors"
-                    >
-                      登录
-                    </button>
-                    <button
-                      onClick={() => navigate('/register')}
-                      className="bg-primary text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors text-sm font-medium"
-                    >
-                      注册
-                    </button>
-                  </>
-                )}
+                  ← 返回
+                </button>
+              )}
+              <h1
+                className="text-2xl font-bold text-primary cursor-pointer"
+                onClick={() => navigate('/dashboard')}
+              >
+                🌿 悦恩人机共写平台
+              </h1>
+              {title && (
+                <span className="ml-4 text-gray-400">/</span>
+              )}
+              {title && (
+                <span className="ml-4 text-lg font-medium text-gray-700">{title}</span>
+              )}
+            </div>
+
+            {/* 右侧 */}
+            <div className="flex items-center space-x-4">
+              {actions}
+              <div className="flex items-center space-x-2">
+                <span className="text-sm text-gray-600">
+                  欢迎，{user?.name || '用户'}
+                </span>
+                <button
+                  onClick={handleLogout}
+                  className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors text-sm"
+                >
+                  退出登录
+                </button>
               </div>
             </div>
           </div>
-        </nav>
-      )}
-      <main className="w-full">
-        {children}
-      </main>
-      <footer className="bg-white border-t border-gray-200 mt-auto">
-        <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-          <p className="text-center text-sm text-gray-500">
-            © 2025 悦恩人机共写平台 v2.1.0 | 让环保文书创作更智能
-          </p>
         </div>
-      </footer>
+      </nav>
+
+      {/* 侧边导航栏（仅在非编辑器页面显示） */}
+      {!location.pathname.startsWith('/editor') && (
+        <div className="flex">
+          <aside className="w-64 bg-white shadow-sm min-h-[calc(100vh-4rem)]">
+            <nav className="mt-5 px-2">
+              <div className="space-y-1">
+                {navItems.map((item) => (
+                  <button
+                    key={item.path}
+                    onClick={() => navigate(item.path)}
+                    className={`w-full text-left group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors ${
+                      isActiveRoute(item.path)
+                        ? 'bg-primary text-white'
+                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    }`}
+                  >
+                    <span className="mr-3 text-lg">{item.icon}</span>
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            </nav>
+          </aside>
+
+          {/* 主内容区域 */}
+          <main className="flex-1">
+            <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+              <div className="px-4 py-6 sm:px-0">
+                {children}
+              </div>
+            </div>
+          </main>
+        </div>
+      )}
+
+      {/* 编辑器页面直接显示内容，不显示侧边栏 */}
+      {location.pathname.startsWith('/editor') && (
+        <main className="flex-1">
+          {children}
+        </main>
+      )}
     </div>
   )
 }

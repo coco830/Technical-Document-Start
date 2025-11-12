@@ -25,13 +25,31 @@ export default function Login() {
       setToken(res.data.access_token)
       setUser(res.data.user)
 
+      // 检查是否使用了降级处理
+      if (res.data.access_token.includes('mock_')) {
+        console.warn('登录使用了降级处理，可能是离线模式')
+        // 可以在这里显示一个提示，告诉用户当前处于离线模式
+      }
+
       // 跳转到项目页面
       navigate('/projects')
     } catch (error: any) {
       console.error('登录失败:', error)
 
       // 显示具体错误信息
-      const errorMessage = error.response?.data?.detail || '登录失败，请检查邮箱和密码'
+      let errorMessage = '登录失败，请检查邮箱和密码'
+      
+      if (error.response?.data?.detail) {
+        errorMessage = error.response.data.detail
+      } else if (error.message) {
+        errorMessage = error.message
+      }
+
+      // 如果是网络错误，提供更友好的提示
+      if (error.message?.includes('Network Error') || error.code === 'NETWORK_ERROR') {
+        errorMessage = '网络连接失败，请检查网络连接后重试'
+      }
+
       setError('root', {
         type: 'manual',
         message: errorMessage

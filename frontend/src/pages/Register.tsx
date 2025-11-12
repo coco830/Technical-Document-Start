@@ -25,16 +25,34 @@ export default function Register() {
   const onSubmit = async (data: RegisterForm) => {
     setIsLoading(true)
     try {
-      await api.post('/auth/register', data)
+      const res = await api.post('/auth/register', data)
 
-      // 注册成功，跳转到登录页
-      alert('注册成功！请登录您的账号')
+      // 检查是否使用了降级处理
+      if (res.data.message?.includes('注册成功') && res.data.access_token?.includes('mock_')) {
+        console.warn('注册使用了降级处理，可能是离线模式')
+      }
+
+      // 注册成功，显示后端返回的消息并跳转到登录页
+      const message = res.data.detail || res.data.message || '注册成功！请登录您的账号'
+      alert(message)
       navigate('/login')
     } catch (error: any) {
       console.error('注册失败:', error)
 
       // 显示具体错误信息
-      const errorMessage = error.response?.data?.detail || '注册失败，请稍后重试'
+      let errorMessage = '注册失败，请稍后重试'
+      
+      if (error.response?.data?.detail) {
+        errorMessage = error.response.data.detail
+      } else if (error.message) {
+        errorMessage = error.message
+      }
+
+      // 如果是网络错误，提供更友好的提示
+      if (error.message?.includes('Network Error') || error.code === 'NETWORK_ERROR') {
+        errorMessage = '网络连接失败，请检查网络连接后重试'
+      }
+
       setError('root', {
         type: 'manual',
         message: errorMessage

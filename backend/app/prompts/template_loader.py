@@ -8,7 +8,8 @@ import os
 from pathlib import Path
 from typing import Dict, List, Optional, Any
 import yaml
-from jinja2 import Environment, FileSystemLoader, select_autoescape, SandboxedEnvironment
+from jinja2 import Environment, FileSystemLoader, select_autoescape
+from jinja2.sandbox import SandboxedEnvironment
 from jinja2.exceptions import TemplateNotFound, TemplateSyntaxError
 import logging
 

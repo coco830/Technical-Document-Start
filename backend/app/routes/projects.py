@@ -1,10 +1,11 @@
 from fastapi import APIRouter, HTTPException, status, Depends, Query
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import or_, func
 from typing import Optional
 from app.database import get_db
 from app.models.user import User
 from app.models.project import Project
+from app.models.document import Document
 from app.schemas.project import (
     ProjectCreate,
     ProjectUpdate,
@@ -14,6 +15,10 @@ from app.schemas.project import (
 )
 from app.utils.auth import get_current_user
 import math
+import logging
+
+# 配置日志
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/projects", tags=["项目管理"])
 
@@ -34,8 +39,10 @@ async def get_projects(
     - **search**: 可选的搜索关键词（在标题和描述中搜索）
     - **status**: 可选的状态过滤（active/completed/archived）
     """
-    # 构建基础查询
-    query = db.query(Project).filter(Project.user_id == current_user.id)
+    # 构建基础查询，使用eager loading避免N+1问题
+    query = db.query(Project).options(
+        joinedload(Project.documents)  # 预加载关联的文档
+    ).filter(Project.user_id == current_user.id)
 
     # 状态过滤
     if status:
@@ -47,32 +54,30 @@ async def get_projects(
             )
         query = query.filter(Project.status == status)
 
-    # 搜索功能
+    # 创建分页参数
+    pagination = PaginationParams(page=page, page_size=page_size)
+    
+    # 使用优化的分页查询
     if search:
-        search_filter = or_(
-            Project.title.ilike(f"%{search}%"),
-            Project.description.ilike(f"%{search}%")
+        # 搜索优化的分页
+        result = search_optimized_pagination(
+            query=query,
+            search_term=search,
+            search_fields=['title', 'description'],
+            pagination=pagination,
+            db=db
         )
-        query = query.filter(search_filter)
-
-    # 获取总数
-    total = query.count()
-
-    # 计算总页数
-    total_pages = math.ceil(total / page_size) if total > 0 else 1
-
-    # 分页查询（按创建时间倒序）
-    projects = query.order_by(Project.created_at.desc())\
-                    .offset((page - 1) * page_size)\
-                    .limit(page_size)\
-                    .all()
+    else:
+        # 普通优化的分页
+        query = query.order_by(Project.created_at.desc())
+        result = optimize_offset_pagination(query, pagination, db)
 
     return ProjectListResponse(
-        projects=[ProjectResponse.model_validate(p) for p in projects],
-        total=total,
-        page=page,
-        page_size=page_size,
-        total_pages=total_pages
+        projects=[ProjectResponse.model_validate(p) for p in result.items],
+        total=result.total,
+        page=result.page,
+        page_size=result.page_size,
+        total_pages=result.total_pages
     )
 
 @router.post("/", response_model=ProjectResponse, status_code=status.HTTP_201_CREATED)
@@ -120,7 +125,9 @@ async def get_project(
 
     - **project_id**: 项目ID
     """
-    project = db.query(Project).filter(
+    project = db.query(Project).options(
+        joinedload(Project.documents)  # 预加载关联的文档
+    ).filter(
         Project.id == project_id,
         Project.user_id == current_user.id
     ).first()
@@ -149,7 +156,9 @@ async def update_project(
     - **status**: 项目状态（可选）
     """
     # 查找项目
-    project = db.query(Project).filter(
+    project = db.query(Project).options(
+        joinedload(Project.documents)  # 预加载关联的文档
+    ).filter(
         Project.id == project_id,
         Project.user_id == current_user.id
     ).first()
@@ -196,7 +205,9 @@ async def delete_project(
     - **project_id**: 项目ID
     """
     # 查找项目
-    project = db.query(Project).filter(
+    project = db.query(Project).options(
+        joinedload(Project.documents)  # 预加载关联的文档
+    ).filter(
         Project.id == project_id,
         Project.user_id == current_user.id
     ).first()

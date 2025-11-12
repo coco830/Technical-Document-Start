@@ -123,6 +123,34 @@ async def login(user_data: UserLogin, db: Session = Depends(get_db)):
         )
     )
 
+@router.post("/refresh", response_model=TokenResponse)
+async def refresh_token(current_user: User = Depends(get_current_user)):
+    """
+    刷新Token接口
+
+    使用当前有效的token获取新的token
+    """
+    # 生成新的 JWT Token
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": current_user.email, "user_id": current_user.id, "name": current_user.name},
+        expires_delta=access_token_expires
+    )
+
+    # 返回新的token和用户信息
+    return TokenResponse(
+        access_token=access_token,
+        token_type="bearer",
+        user=UserResponse(
+            id=current_user.id,
+            email=current_user.email,
+            name=current_user.name,
+            is_active=current_user.is_active,
+            is_verified=current_user.is_verified,
+            created_at=current_user.created_at
+        )
+    )
+
 @router.get("/verify", response_model=UserResponse)
 async def verify_token(current_user: User = Depends(get_current_user)):
     """

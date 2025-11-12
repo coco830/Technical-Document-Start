@@ -14,8 +14,12 @@ app = FastAPI(
     version="2.1.0"
 )
 
+# 初始化数据库
+from init_db import init_database
+init_database()
+
 # 从环境变量读取CORS配置
-cors_origins = os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",")
+cors_origins = os.getenv("CORS_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000").split(",")
 
 # CORS 配置
 app.add_middleware(
@@ -39,13 +43,26 @@ async def health_check():
     return {"status": "healthy"}
 
 # 引入路由模块
-from app.routes import auth, projects, documents, comments, ai_generate
+from app.routes import auth, projects, documents, comments, ai_generate, performance, error_monitoring, admin, enterprise
 
 app.include_router(auth.router)
 app.include_router(projects.router)
 app.include_router(documents.router)
 app.include_router(comments.router)
 app.include_router(ai_generate.router)
+app.include_router(performance.router)
+app.include_router(error_monitoring.router)
+app.include_router(admin.router)
+app.include_router(enterprise.router)
+
+# 导出路由（需要安装 reportlab, python-docx, beautifulsoup4）
+try:
+    from app.routes import export
+    app.include_router(export.router)
+    print("✅ Export module loaded successfully")
+except ImportError as e:
+    print(f"⚠️  Export module not available: {e}")
+    print("   Run: pip install reportlab python-docx beautifulsoup4")
 
 # 配置静态文件服务（用于图片访问）
 uploads_dir = Path("uploads")
