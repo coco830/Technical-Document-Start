@@ -28,7 +28,7 @@ from pathlib import Path
 # 配置日志
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/documents", tags=["文档管理"])
+router = APIRouter(prefix="/documents", tags=["文档管理"])
 
 @router.get("/", response_model=DocumentListResponse)
 async def get_documents(

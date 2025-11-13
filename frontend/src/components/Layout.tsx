@@ -26,7 +26,7 @@ export default function Layout({ children, title, showBackButton = false, action
   const navItems = [
     { path: '/dashboard', label: '工作台', icon: '🏠' },
     { path: '/projects', label: '项目管理', icon: '📁' },
-    { path: '/templates', label: '模板库', icon: '📋' },
+    { path: '/templates', label: '模板管理', icon: '🧩' }
   ]
 
   return (

@@ -12,7 +12,9 @@ from app.utils.query_monitor import setup_sqlalchemy_monitoring
 logger = logging.getLogger(__name__)
 
 # 从环境变量读取数据库URL，默认使用SQLite
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./yueen.db")
+# 使用绝对路径确保数据库文件位置一致
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite:///{os.path.join(BASE_DIR, 'yueen.db')}")
 
 # 创建数据库引擎
 # SQLite需要check_same_thread=False以支持多线程

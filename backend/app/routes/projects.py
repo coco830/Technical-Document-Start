@@ -14,13 +14,14 @@ from app.schemas.project import (
     MessageResponse
 )
 from app.utils.auth import get_current_user
+from app.utils.pagination import PaginationParams, optimize_offset_pagination, search_optimized_pagination
 import math
 import logging
 
 # 配置日志
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/projects", tags=["项目管理"])
+router = APIRouter(prefix="/projects", tags=["项目管理"])
 
 @router.get("/", response_model=ProjectListResponse)
 async def get_projects(

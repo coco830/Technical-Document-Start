@@ -4,9 +4,14 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 import Dashboard from './pages/Dashboard'
 import Projects from './pages/Projects'
-import Editor from './pages/Editor'
 import Templates from './pages/Templates'
-import EnterpriseInfo from './pages/EnterpriseInfo'
+import ProjectDetail from './pages/ProjectDetail'
+import ProjectEnterprise from './pages/ProjectEnterprise'
+import TemplateEngineTest from './pages/TemplateEngineTest'
+import Editor from './pages/Editor'
+import AIGenerate from './pages/AIGenerate'
+import Export from './pages/Export'
+import DataCenter from './pages/DataCenter'
 import NotFound from './pages/NotFound'
 import Unauthorized from './pages/Unauthorized'
 import AuthProvider from './providers/AuthProvider'
@@ -57,21 +62,74 @@ function App() {
               </ProtectedRoute>
             </RouteGuard>
           } />
-          <Route path="/editor/:id?" element={
+
+          {/* 项目内部路由 */}
+          <Route path="/project/:id" element={
+            <RouteGuard requireAuth={true}>
+              <ProtectedRoute>
+                <ProjectDetail />
+              </ProtectedRoute>
+            </RouteGuard>
+          } />
+          <Route path="/project/:id/enterprise" element={
+            <RouteGuard requireAuth={true}>
+              <ProtectedRoute>
+                <ProjectEnterprise />
+              </ProtectedRoute>
+            </RouteGuard>
+          } />
+          <Route path="/project/:id/enterprise/:step" element={
+            <RouteGuard requireAuth={true}>
+              <ProtectedRoute>
+                <ProjectEnterprise />
+              </ProtectedRoute>
+            </RouteGuard>
+          } />
+          <Route path="/project/:id/ai-generate" element={
+            <RouteGuard requireAuth={true}>
+              <ProtectedRoute>
+                <AIGenerate />
+              </ProtectedRoute>
+            </RouteGuard>
+          } />
+          <Route path="/project/:id/ai-generate/:step" element={
+            <RouteGuard requireAuth={true}>
+              <ProtectedRoute>
+                <AIGenerate />
+              </ProtectedRoute>
+            </RouteGuard>
+          } />
+          <Route path="/project/:id/editor" element={
             <RouteGuard requireAuth={true}>
               <ProtectedRoute>
                 <Editor />
               </ProtectedRoute>
             </RouteGuard>
           } />
-          <Route path="/enterprise-info" element={
+          <Route path="/project/:id/export" element={
             <RouteGuard requireAuth={true}>
               <ProtectedRoute>
-                <EnterpriseInfo />
+                <Export />
               </ProtectedRoute>
             </RouteGuard>
           } />
-          
+          <Route path="/project/:id/export/:format" element={
+            <RouteGuard requireAuth={true}>
+              <ProtectedRoute>
+                <Export />
+              </ProtectedRoute>
+            </RouteGuard>
+          } />
+
+          {/* 保留模板引擎测试路由 */}
+          <Route path="/template-engine-test" element={
+            <RouteGuard requireAuth={true}>
+              <ProtectedRoute>
+                <TemplateEngineTest />
+              </ProtectedRoute>
+            </RouteGuard>
+          } />
+
           {/* 无权限页面 */}
           <Route path="/unauthorized" element={<Unauthorized />} />
           

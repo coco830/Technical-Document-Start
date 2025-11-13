@@ -15,6 +15,9 @@ app = FastAPI(
 )
 
 # 初始化数据库
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from init_db import init_database
 init_database()
 
@@ -43,22 +46,24 @@ async def health_check():
     return {"status": "healthy"}
 
 # 引入路由模块
-from app.routes import auth, projects, documents, comments, ai_generate, performance, error_monitoring, admin, enterprise
+from app.routes import auth, projects, documents, comments, ai_generate, performance, error_monitoring, admin, enterprise, debug, templates
 
-app.include_router(auth.router)
-app.include_router(projects.router)
-app.include_router(documents.router)
-app.include_router(comments.router)
-app.include_router(ai_generate.router)
-app.include_router(performance.router)
-app.include_router(error_monitoring.router)
-app.include_router(admin.router)
-app.include_router(enterprise.router)
+app.include_router(auth.router, prefix="/api")
+app.include_router(projects.router, prefix="/api")
+app.include_router(documents.router, prefix="/api")
+app.include_router(comments.router, prefix="/api")
+app.include_router(ai_generate.router, prefix="/api")
+app.include_router(performance.router, prefix="/api")
+app.include_router(error_monitoring.router, prefix="/api")
+app.include_router(admin.router, prefix="/api")
+app.include_router(enterprise.router, prefix="/api")
+app.include_router(debug.router, prefix="/api")
+app.include_router(templates.router, prefix="/api")
 
 # 导出路由（需要安装 reportlab, python-docx, beautifulsoup4）
 try:
     from app.routes import export
-    app.include_router(export.router)
+    app.include_router(export.router, prefix="/api")
     print("✅ Export module loaded successfully")
 except ImportError as e:
     print(f"⚠️  Export module not available: {e}")

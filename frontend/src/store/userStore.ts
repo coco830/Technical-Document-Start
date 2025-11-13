@@ -50,6 +50,7 @@ export const useUserStore = create<UserState>()(
     {
       name: 'user-storage',
       partialize: (state) => ({
+        token: state.token,
         user: state.user,
         isAuthenticated: state.isAuthenticated
       }),

@@ -14,7 +14,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/performance", tags=["性能监控"])
+router = APIRouter(prefix="/performance", tags=["性能监控"])
 
 @router.get("/stats", response_model=Dict[str, Any])
 async def get_performance_stats(

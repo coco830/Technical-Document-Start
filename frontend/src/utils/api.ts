@@ -42,7 +42,8 @@ const processQueue = (error: any, token: string | null = null) => {
 // 刷新token的函数
 const refreshToken = async () => {
   try {
-    const response = await api.post('/auth/refresh', {}, {
+    // 使用simpleApiClient避免无限循环
+    const response = await simpleApiClient.post('/auth/refresh', {}, {
       headers: {
         Authorization: `Bearer ${useUserStore.getState().token}`
       }
@@ -53,6 +54,7 @@ const refreshToken = async () => {
     
     return access_token
   } catch (error) {
+    console.error('Token刷新失败:', error)
     // 刷新失败，清除用户信息并跳转到登录页
     useUserStore.getState().logout()
     window.location.href = '/login'

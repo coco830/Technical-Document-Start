@@ -18,7 +18,7 @@ from ..utils.pagination import optimize_offset_pagination, PaginatedResponse
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/admin", tags=["管理员"])
+router = APIRouter(prefix="/admin", tags=["管理员"])
 
 
 # Pydantic 模型定义

@@ -1,0 +1,122 @@
+- id: "2.1"
+  chapterId: "2"
+  title: "企业概况"
+  type: "ai_written"
+  inputVars: ["enterprise_name", "establish_date", "registered_capital", "employee_count", "main_products", "business_scope", "address", "longitude", "latitude"]
+  templateText: null
+  aiPromptHint: |
+    请根据提供的企业基本信息，编写企业概况部分，内容应包括：
+    1. 企业基本信息：企业名称、成立时间、注册资本、员工规模等
+    2. 主要产品或服务：详细描述企业的主要产品、生产能力或服务范围
+    3. 企业性质：说明企业所有制形式、所属行业等
+    4. 组织架构：简要介绍企业组织结构和管理体系
+    要求语言简洁明了，内容真实准确，符合应急预案编制规范。
+
+- id: "2.1.1"
+  chapterId: "2"
+  title: "地理位置及交通"
+  type: "ai_written"
+  inputVars: ["enterprise_name", "address", "longitude", "latitude", "transportation", "surrounding_roads"]
+  templateText: null
+  aiPromptHint: |
+    请根据提供的企业地理位置信息，编写地理位置及交通部分，内容应包括：
+    1. 具体地理位置：详细描述企业所在位置，包括省、市、区（县）、乡镇（街道）、村（社区）等
+    2. 经纬度坐标：提供企业中心的经纬度坐标
+    3. 交通条件：描述企业周边主要道路、铁路、水路等交通设施情况
+    4. 运输条件：说明原材料和产品运输的主要方式和路线
+    要求描述准确，便于应急响应时快速定位和到达。
+
+- id: "2.1.2.1"
+  chapterId: "2"
+  title: "地形地貌"
+  type: "ai_written"
+  inputVars: ["enterprise_name", "address", "terrain_type", "elevation", "topography_description"]
+  templateText: null
+  aiPromptHint: |
+    请根据提供的企业地形地貌信息，编写地形地貌部分，内容应包括：
+    1. 地形特征：描述企业所在区域的地形类型（平原、丘陵、山地、盆地等）
+    2. 海拔高度：提供企业所在地的海拔高度
+    3. 地势特点：说明企业周边地势起伏情况、坡度等
+    4. 地形对环境事件的影响：分析地形特点对突发环境事件扩散的影响
+    要求描述专业准确，为环境风险评估提供依据。
+
+- id: "2.1.2.2"
+  chapterId: "2"
+  title: "气象条件"
+  type: "ai_written"
+  inputVars: ["enterprise_name", "address", "climate_type", "annual_temperature", "annual_rainfall", "prevailing_wind", "extreme_weather"]
+  templateText: null
+  aiPromptHint: |
+    请根据提供的企业气象条件信息，编写气象条件部分，内容应包括：
+    1. 气候特征：描述企业所在区域的气候类型和特点
+    2. 气温情况：提供年平均气温、最高气温、最低气温等数据
+    3. 降水情况：说明年平均降水量、降水季节分布特点
+    4. 风向风速：描述常年主导风向、平均风速等
+    5. 极端天气：列出可能影响企业的极端天气现象
+    要求数据准确，分析气象条件对突发环境事件扩散的影响。
+
+- id: "2.1.2.3"
+  chapterId: "2"
+  title: "水文"
+  type: "ai_written"
+  inputVars: ["enterprise_name", "address", "nearby_rivers", "groundwater_depth", "water_quality", "flood_risk"]
+  templateText: null
+  aiPromptHint: |
+    请根据提供的企业水文信息，编写水文部分，内容应包括：
+    1. 地表水：描述企业周边主要河流、湖泊、水库等地表水体情况
+    2. 地下水：说明企业所在区域地下水埋深、水质等情况
+    3. 水文地质：简要描述企业所在区域的水文地质条件
+    4. 水文风险：分析水文条件对突发环境事件的影响，如洪水风险等
+    要求描述专业准确，为水环境风险评估提供依据。
+
+- id: "2.1.3.text"
+  chapterId: "2"
+  title: "周边环境"
+  type: "ai_written"
+  inputVars: ["enterprise_name", "address", "surrounding_environment", "env_sensitivity", "nearby_residents"]
+  templateText: null
+  aiPromptHint: |
+    请根据提供的企业周边环境信息，编写周边环境文字描述部分，内容应包括：
+    1. 周边土地利用：描述企业周边土地利用情况，如居民区、商业区、工业区、农业区等
+    2. 环境敏感点：说明企业周边的环境敏感保护目标分布情况
+    3. 人口分布：描述企业周边人口密度和分布特点
+    4. 生态特征：简要说明企业周边的生态环境特征
+    要求描述全面准确，为环境风险评估提供依据。
+
+- id: "2.1.3.table"
+  chapterId: "2"
+  title: "周边环境（表格）"
+  type: "variable_filled"
+  inputVars: ["env_receptors"]
+  templateText: "渲染为环境保护目标一览表，列头包括环境要素、环境保护目标、相对方位、距离、功能规模、环境质量目标"
+  aiPromptHint: null
+
+- id: "2.1.4"
+  chapterId: "2"
+  title: "企业环保工作情况"
+  type: "ai_written"
+  inputVars: ["enterprise_name", "env_management_system", "pollution_control_facilities", "env_monitoring", "env_incidents"]
+  templateText: null
+  aiPromptHint: |
+    请根据提供的企业环保工作信息，编写企业环保工作情况部分，内容应包括：
+    1. 环境管理体系：描述企业环境管理体系建设情况，如ISO14001认证等
+    2. 污染防治设施：说明企业主要污染防治设施的类型、处理能力和运行状况
+    3. 环境监测：描述企业环境监测制度、监测点位和监测指标
+    4. 环保投入：说明企业环保投入情况和环保设施运行维护情况
+    5. 环境绩效：简要描述企业环境绩效和环境表现
+    要求内容真实准确，突出企业环保工作成效。
+
+- id: "2.1.5"
+  chapterId: "2"
+  title: "企业建设布置情况"
+  type: "ai_written"
+  inputVars: ["enterprise_name", "plant_layout", "production_facilities", "storage_facilities", "waste_facilities", "safety_zones"]
+  templateText: null
+  aiPromptHint: |
+    请根据提供的企业建设布置信息，编写企业建设布置情况部分，内容应包括：
+    1. 总体布局：描述企业总体布局和功能分区情况
+    2. 生产设施：说明主要生产装置的布局、规模和工艺特点
+    3. 储存设施：描述原料、产品、废物等储存设施的布局和容量
+    4. 公用工程：说明供水、供电、供热等公用工程设施情况
+    5. 安全距离：分析各设施之间的安全距离是否符合要求
+    要求描述清晰准确，为风险评估和应急响应提供依据。

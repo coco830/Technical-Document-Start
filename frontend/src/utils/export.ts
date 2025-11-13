@@ -122,7 +122,7 @@ export async function exportBatch(options: BatchExportOptions): Promise<void> {
  */
 export async function getSupportedFormats() {
   try {
-    const response = await apiClient.get('/api/export/formats')
+    const response = await apiClient.get('/export/formats')
     return response.data.formats
   } catch (error) {
     console.error('获取支持格式失败:', error)

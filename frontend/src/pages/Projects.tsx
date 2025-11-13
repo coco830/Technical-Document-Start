@@ -217,10 +217,10 @@ export default function Projects() {
                 </p>
                 <div className="flex gap-2">
                   <button
-                    onClick={() => navigate(`/editor/${project.id}`)}
+                    onClick={() => navigate(`/project/${project.id}`)}
                     className="flex-1 bg-primary text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors"
                   >
-                    打开项目
+                    进入项目
                   </button>
                   <button
                     onClick={() => deleteProject(project.id, project.title)}

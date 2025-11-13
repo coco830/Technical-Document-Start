@@ -19,7 +19,7 @@ from app.utils.auth import get_current_user
 from app.utils.pagination import get_pagination_params, paginate_query
 from app.utils.error_handler import handle_error, ErrorCategory
 
-router = APIRouter(prefix="/api/enterprise", tags=["企业信息"])
+router = APIRouter(prefix="/enterprise", tags=["企业信息"])
 
 
 def convert_enterprise_to_response(enterprise: EnterpriseInfo) -> EnterpriseInfoResponse:

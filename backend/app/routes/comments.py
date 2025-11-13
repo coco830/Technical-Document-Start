@@ -19,7 +19,7 @@ import logging
 # 配置日志
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/documents", tags=["评论管理"])
+router = APIRouter(prefix="/documents", tags=["评论管理"])
 
 @router.get("/{document_id}/comments", response_model=CommentListResponse)
 async def get_comments(

@@ -10,14 +10,17 @@ from pydantic import BaseModel
 
 from app.database import get_db
 from app.models.document import Document
+from app.models.user import User
 from app.utils.auth import get_current_user
 from app.export.pdf_export import PDFExporter
 from app.export.docx_export import DocxExporter
 
 import os
 from pathlib import Path
+from datetime import datetime
+from typing import Dict, Any
 
-router = APIRouter(prefix="/api/export", tags=["export"])
+router = APIRouter(prefix="/export", tags=["export"])
 
 
 class ExportRequest(BaseModel):
@@ -32,6 +35,16 @@ class BatchExportRequest(BaseModel):
     document_ids: List[int]
     format: str  # pdf 或 docx
     custom_filename: Optional[str] = None
+
+
+class ExportHistoryItem(BaseModel):
+    """导出历史项"""
+    id: int
+    project_id: int
+    project_title: str
+    format: str
+    created_at: str
+    file_url: Optional[str] = None
 
 
 @router.post("/document/{document_id}")
@@ -193,6 +206,48 @@ async def export_batch(
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"批量导出失败: {str(e)}")
+
+
+@router.get("/history/", response_model=List[ExportHistoryItem])
+async def get_export_history(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    获取导出历史记录
+
+    Returns:
+        导出历史记录列表
+    """
+    try:
+        # 查询用户的文档
+        documents = db.query(Document).filter(
+            Document.user_id == current_user.id
+        ).order_by(Document.updated_at.desc()).all()
+
+        # 模拟导出历史数据（实际应该有专门的导出记录表）
+        export_history = []
+        for i, doc in enumerate(documents[:10]):  # 限制最近10条
+            # 模拟不同的导出格式
+            formats = ['pdf', 'word'] if i % 2 == 0 else ['pdf']
+            for fmt in formats:
+                history_item = ExportHistoryItem(
+                    id=len(export_history) + 1,
+                    project_id=doc.id,
+                    project_title=doc.title,
+                    format=fmt,
+                    created_at=doc.updated_at.strftime("%Y-%m-%d %H:%M:%S"),
+                    file_url=f"/exports/{doc.id}.{fmt}" if i < 3 else None  # 模拟文件URL
+                )
+                export_history.append(history_item)
+
+        return export_history
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"获取导出历史失败: {str(e)}"
+        )
 
 
 @router.get("/formats")

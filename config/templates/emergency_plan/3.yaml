@@ -1,0 +1,124 @@
+# 第三章应急预案模板配置
+# 包含应急响应相关的章节模板
+
+- id: "3.1"
+  title: "应急响应流程"
+  type: "fixed"
+  inputVars: null
+  templateText: |
+    ## 应急响应启动条件
+    
+    1. 发生人员伤亡事故
+    2. 设备设施严重损坏
+    3. 环境污染事件
+    4. 自然灾害影响
+    5. 其他需要启动应急响应的情况
+    
+    ## 响应级别划分
+    
+    1. 一级响应：特别重大事故
+    2. 二级响应：重大事故
+    3. 三级响应：较大事故
+    4. 四级响应：一般事故
+    
+    ## 响应流程
+    
+    1. 事故报告与初步评估
+    2. 启动相应级别应急响应
+    3. 成立现场指挥部
+    4. 组织应急救援力量
+    5. 实施应急处置措施
+    6. 监测事态发展
+    7. 调整响应级别
+    8. 响应终止与后期处置
+  aiPromptHint: null
+
+- id: "3.2"
+  title: "应急处置措施"
+  type: "hybrid"
+  inputVars: ["emergency_types", "key_equipment", "evacuation_routes"]
+  templateText: |
+    ## 常见事故应急处置
+    
+    {{#emergency_types}}
+    ### {{type}}
+    
+    处置原则：{{principle}}
+    
+    处置步骤：
+    {{#steps}}
+    1. {{.}}
+    {{/steps}}
+    
+    {{/emergency_types}}
+    
+    ## 关键设备应急操作
+    
+    {{#key_equipment}}
+    ### {{name}}
+    
+    应急操作程序：
+    {{#procedures}}
+    - {{.}}
+    {{/procedures}}
+    
+    {{/key_equipment}}
+    
+    ## 疏散路线与集合点
+    
+    主要疏散路线：
+    {{#evacuation_routes}}
+    - {{route}} → {{destination}}
+    {{/evacuation_routes}}
+  aiPromptHint: |
+    基于提供的事故类型和设备信息，补充以下内容：
+    1. 各类事故的详细处置技术要点
+    2. 关键设备的应急操作注意事项
+    3. 疏散过程中的安全保障措施
+    4. 特殊情况下的应急处置方案
+
+- id: "3.3"
+  title: "应急资源保障"
+  type: "variable_filled"
+  inputVars: ["emergency_supplies", "medical_resources", "external_support"]
+  templateText: |
+    ## 应急物资储备
+    
+    {{#emergency_supplies}}
+    - {{name}}：数量{{quantity}}，存放位置{{location}}
+    {{/emergency_supplies}}
+    
+    ## 医疗资源
+    
+    {{#medical_resources}}
+    - {{type}}：{{provider}}，联系电话{{phone}}，距离{{distance}}
+    {{/medical_resources}}
+    
+    ## 外部支援力量
+    
+    {{#external_support}}
+    - {{organization}}：{{capability}}，联系方式{{contact}}
+    {{/external_support}}
+    
+    ## 资源调配流程
+    
+    1. 评估资源需求
+    2. 启动内部资源调配
+    3. 申请外部支援
+    4. 建立资源管理台账
+    5. 定期检查更新
+  aiPromptHint: null
+
+- id: "3.4"
+  title: "信息发布与沟通"
+  type: "ai_written"
+  inputVars: ["stakeholders", "communication_channels", "key_messages"]
+  templateText: null
+  aiPromptHint: |
+    请根据提供的信息，编写信息发布与沟通方案，包括：
+    1. 信息发布原则和流程
+    2. 不同利益相关者的沟通策略
+    3. 信息发布的内容和时机
+    4. 舆情监控与应对措施
+    5. 内外部沟通协调机制
+    要求确保信息准确、及时、透明，维护企业形象和社会稳定。

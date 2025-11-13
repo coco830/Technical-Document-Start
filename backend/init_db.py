@@ -8,6 +8,7 @@ from app.models.user import User
 from app.models.project import Project
 from app.models.document import Document
 from app.models.comment import Comment
+from app.models.enterprise import EnterpriseInfo
 
 def init_database():
     """初始化数据库，创建所有表"""

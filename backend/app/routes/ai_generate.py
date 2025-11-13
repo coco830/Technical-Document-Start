@@ -22,7 +22,7 @@ from ..services.ai_service import get_ai_service
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/ai", tags=["AI生成"])
+router = APIRouter(prefix="/ai", tags=["AI生成"])
 
 # 初始化服务
 template_loader = TemplateLoader()

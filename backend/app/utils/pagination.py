@@ -73,7 +73,7 @@ def optimize_offset_pagination(
     start_time = time.time()
     
     # 获取总数（不包含排序和关联加载）
-    count_query = query.statement.with_only_columns([func.count()])
+    count_query = query.statement.with_only_columns(func.count())
     total = db.execute(count_query).scalar()
     
     # 计算总页数
