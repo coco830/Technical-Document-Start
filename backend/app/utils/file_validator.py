@@ -3,7 +3,12 @@ import logging
 import mimetypes
 from typing import Optional, Tuple, Dict, Any
 from pathlib import Path
-import magic
+
+try:
+    import magic
+    HAS_MAGIC = True
+except ImportError:
+    HAS_MAGIC = False
 
 # 配置日志
 logger = logging.getLogger(__name__)
@@ -195,6 +200,10 @@ class FileValidator:
     
     def _validate_with_magic(self, file_content: bytes, expected_type: str) -> None:
         """使用python-magic库进行文件类型验证"""
+        if not HAS_MAGIC:
+            self.logger.warning("python-magic库未安装，跳过魔数验证")
+            return
+            
         try:
             # 检测文件类型
             detected_type = magic.from_buffer(file_content, mime=True)
@@ -225,8 +234,6 @@ class FileValidator:
             
             self.logger.info(f"Magic库验证通过: 检测类型={detected_type}, 声明类型={expected_type}")
             
-        except ImportError:
-            self.logger.warning("python-magic库未安装，跳过魔数验证")
         except Exception as e:
             self.logger.error(f"Magic库验证失败: {str(e)}")
             # 不阻止上传，但记录警告

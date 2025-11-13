@@ -5,9 +5,10 @@
 
 import time
 import logging
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union, Generic
 from sqlalchemy.orm import Query, Session
 from sqlalchemy import func, and_, or_
+from pydantic import BaseModel
 from app.utils.query_monitor import log_pagination_performance
 
 logger = logging.getLogger(__name__)
@@ -276,3 +277,23 @@ def create_pagination_response(
             response["pagination"]["next_url"] = f"{request_path}?{ '&'.join([f'{k}={v}' for k, v in next_params.items()]) }"
     
     return response
+
+
+def get_pagination_params(page: int, page_size: int) -> PaginationParams:
+    """获取分页参数"""
+    return PaginationParams(page=page, page_size=page_size)
+
+
+def paginate_query(query, page: int, page_size: int, db: Session = None):
+    """分页查询函数"""
+    pagination_params = get_pagination_params(page, page_size)
+    if db is None:
+        from app.database import get_db
+        db = next(get_db())
+    return optimize_offset_pagination(query, pagination_params, db)
+
+
+class PaginatedResponse(BaseModel):
+    """分页响应基类"""
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)

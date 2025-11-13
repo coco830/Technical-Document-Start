@@ -32,19 +32,20 @@ interface EnterpriseBasic {
   enterprise_name: string
   address: string
   industry: string
-  contact_person: string
-  phone: string
-  employee_count: string
-  main_products: string
-  annual_output: string
-  description: string
+  legal_representative: string
+  contact_phone: string
+  fax: string
+  email: string
+  overview: string
+  risk_level: string  // 风险级别
 }
 
 interface EnvPermits {
   env_assessment_no: string
   acceptance_no: string
   discharge_permit_no: string
-  env_dept: string
+  has_emergency_plan: string  // 有/无
+  emergency_plan_code: string  // 仅当有预案时填写
 }
 
 interface HazardousMaterial {
@@ -58,18 +59,30 @@ interface HazardousMaterial {
 interface EmergencyResource {
   id: string
   name: string
+  custom_resource_name: string  // 自定义应急物资名称
   quantity: string
   purpose: string
   storage_location: string
   custodian: string
+  custodian_contact: string  // 保管人联系方式
 }
 
 interface EmergencyOrg {
   id: string
   org_name: string
+  custom_org_name: string  // 自定义组织机构名称
   responsible_person: string
   contact_phone: string
-  duties: string
+  department: string  // 企业对应部门
+  duty_phone: string  // 企业24小时值班电话
+}
+
+interface ExternalEmergencyContact {
+  id: string
+  unit_name: string  // 单位名称
+  contact_method: string  // 通讯方式
+  custom_contact_method: string  // 自定义通讯方式
+  custom_unit_name: string  // 自定义单位名称
 }
 
 interface EnterpriseFormData {
@@ -78,20 +91,8 @@ interface EnterpriseFormData {
   hazardous_materials: HazardousMaterial[]
   emergency_resources: EmergencyResource[]
   emergency_orgs: EmergencyOrg[]
+  external_emergency_contacts: ExternalEmergencyContact[]
 }
-
-// 行业选项
-const industryOptions = [
-  '化工',
-  '石化',
-  '冶金',
-  '电子',
-  '纺织',
-  '食品加工',
-  '制药',
-  '建材',
-  '其他'
-]
 
 export default function EnterpriseInfo() {
   const [expandedSections, setExpandedSections] = useState({
@@ -99,7 +100,8 @@ export default function EnterpriseInfo() {
     permits: true,
     materials: true,
     resources: true,
-    orgs: true
+    orgs: true,
+    external_contacts: true
   })
 
   const {
@@ -116,22 +118,24 @@ export default function EnterpriseInfo() {
         enterprise_name: '',
         address: '',
         industry: '',
-        contact_person: '',
-        phone: '',
-        employee_count: '',
-        main_products: '',
-        annual_output: '',
-        description: ''
+        legal_representative: '',
+        contact_phone: '',
+        fax: '',
+        email: '',
+        overview: '',
+        risk_level: ''
       },
       env_permits: {
         env_assessment_no: '',
         acceptance_no: '',
         discharge_permit_no: '',
-        env_dept: ''
+        has_emergency_plan: '',
+        emergency_plan_code: ''
       },
       hazardous_materials: [],
       emergency_resources: [],
-      emergency_orgs: []
+      emergency_orgs: [],
+      external_emergency_contacts: []
     }
   })
 
@@ -163,6 +167,15 @@ export default function EnterpriseInfo() {
     name: 'emergency_orgs'
   })
 
+  const {
+    fields: externalContactFields,
+    append: appendExternalContact,
+    remove: removeExternalContact
+  } = useFieldArray({
+    control,
+    name: 'external_emergency_contacts'
+  })
+
   // 切换折叠状态
   const toggleSection = (section: keyof typeof expandedSections) => {
     setExpandedSections(prev => ({
@@ -186,10 +199,12 @@ export default function EnterpriseInfo() {
     appendResource({
       id: Date.now().toString(),
       name: '',
+      custom_resource_name: '',
       quantity: '',
       purpose: '',
       storage_location: '',
-      custodian: ''
+      custodian: '',
+      custodian_contact: ''
     })
   }
 
@@ -197,9 +212,21 @@ export default function EnterpriseInfo() {
     appendOrg({
       id: Date.now().toString(),
       org_name: '',
+      custom_org_name: '',
       responsible_person: '',
       contact_phone: '',
-      duties: ''
+      department: '',
+      duty_phone: ''
+    })
+  }
+
+  const addExternalContact = () => {
+    appendExternalContact({
+      id: Date.now().toString(),
+      unit_name: '',
+      contact_method: '',
+      custom_contact_method: '',
+      custom_unit_name: ''
     })
   }
 
@@ -274,15 +301,12 @@ export default function EnterpriseInfo() {
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         所属行业 <span className="text-red-500">*</span>
                       </label>
-                      <select
+                      <input
+                        type="text"
                         {...register('enterprise_basic.industry', { required: '所属行业为必填项' })}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                      >
-                        <option value="">请选择行业</option>
-                        {industryOptions.map(option => (
-                          <option key={option} value={option}>{option}</option>
-                        ))}
-                      </select>
+                        placeholder="请输入所属行业"
+                      />
                       {errors.enterprise_basic?.industry && (
                         <p className="mt-1 text-sm text-red-600">{errors.enterprise_basic.industry.message}</p>
                       )}
@@ -304,13 +328,13 @@ export default function EnterpriseInfo() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        联系人
+                        法定代表人
                       </label>
                       <input
                         type="text"
-                        {...register('enterprise_basic.contact_person')}
+                        {...register('enterprise_basic.legal_representative')}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                        placeholder="请输入联系人姓名"
+                        placeholder="请输入法定代表人姓名"
                       />
                     </div>
                     
@@ -320,7 +344,7 @@ export default function EnterpriseInfo() {
                       </label>
                       <input
                         type="text"
-                        {...register('enterprise_basic.phone')}
+                        {...register('enterprise_basic.contact_phone')}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
                         placeholder="请输入联系电话"
                       />
@@ -330,51 +354,56 @@ export default function EnterpriseInfo() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        员工人数
+                        传真
                       </label>
                       <input
                         type="text"
-                        {...register('enterprise_basic.employee_count')}
+                        {...register('enterprise_basic.fax')}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                        placeholder="请输入员工人数"
+                        placeholder="请输入传真号码"
                       />
                     </div>
                     
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        年产量
+                        电子邮箱
                       </label>
                       <input
-                        type="text"
-                        {...register('enterprise_basic.annual_output')}
+                        type="email"
+                        {...register('enterprise_basic.email')}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                        placeholder="请输入年产量"
+                        placeholder="请输入电子邮箱"
                       />
                     </div>
                   </div>
                   
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      主要产品
+                      企业概况
                     </label>
-                    <input
-                      type="text"
-                      {...register('enterprise_basic.main_products')}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                      placeholder="请输入主要产品"
+                    <textarea
+                      {...register('enterprise_basic.overview')}
+                      rows={6}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary resize-y"
+                      placeholder="请输入企业概况"
+                      style={{ scrollbarWidth: 'thin', scrollbarColor: '#888 #f1f1f1' }}
                     />
                   </div>
                   
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      企业简介
+                      风险级别
                     </label>
-                    <textarea
-                      {...register('enterprise_basic.description')}
-                      rows={4}
+                    <select
+                      {...register('enterprise_basic.risk_level')}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                      placeholder="请输入企业简介"
-                    />
+                    >
+                      <option value="">请选择</option>
+                      <option value="一般环境风险等级（L）">一般环境风险等级（L）</option>
+                      <option value="较大环境风险等级（M）">较大环境风险等级（M）</option>
+                      <option value="重大环境风险等级（H）">重大环境风险等级（H）</option>
+                      <option value="特别重大环境风险等级（T）">特别重大环境风险等级（T）</option>
+                    </select>
                   </div>
                 </div>
               )}
@@ -438,15 +467,31 @@ export default function EnterpriseInfo() {
                     
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        环保主管部门
+                        历史应急预案
                       </label>
-                      <input
-                        type="text"
-                        {...register('env_permits.env_dept')}
+                      <select
+                        {...register('env_permits.has_emergency_plan')}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                        placeholder="请输入环保主管部门"
-                      />
+                      >
+                        <option value="">请选择</option>
+                        <option value="有">有</option>
+                        <option value="无">无</option>
+                      </select>
                     </div>
+                    
+                    {watch('env_permits.has_emergency_plan') === '有' && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          历史应急预案编号
+                        </label>
+                        <input
+                          type="text"
+                          {...register('env_permits.emergency_plan_code')}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                          placeholder="请输入历史应急预案编号"
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -616,17 +661,59 @@ export default function EnterpriseInfo() {
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
                                   物资名称
                                 </label>
-                                <input
-                                  type="text"
-                                  {...register(`emergency_resources.${index}.name`)}
-                                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                                  placeholder="请输入物资名称"
+                                <Controller
+                                  name={`emergency_resources.${index}.name`}
+                                  control={control}
+                                  render={({ field }) => (
+                                    <>
+                                      <select
+                                        value={field.value}
+                                        onChange={(e) => {
+                                          const value = e.target.value;
+                                          field.onChange(value);
+                                          // 如果选择固定选项，则清空自定义输入
+                                          if (value !== '其他') {
+                                            setValue(`emergency_resources.${index}.custom_resource_name`, '');
+                                          }
+                                        }}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                                      >
+                                        <option value="">请选择</option>
+                                        <option value="应急照明灯">应急照明灯</option>
+                                        <option value="防护服">防护服</option>
+                                        <option value="防护头盔">防护头盔</option>
+                                        <option value="防护鞋">防护鞋</option>
+                                        <option value="反光背心">反光背心</option>
+                                        <option value="防护手套">防护手套</option>
+                                        <option value="防护腰带">防护腰带</option>
+                                        <option value="急救箱">急救箱</option>
+                                        <option value="水枪">水枪</option>
+                                        <option value="呼吸器">呼吸器</option>
+                                        <option value="呼吸面罩">呼吸面罩</option>
+                                        <option value="消防水带">消防水带</option>
+                                        <option value="安全带">安全带</option>
+                                        <option value="灭火器">灭火器</option>
+                                        <option value="消防沙">消防沙</option>
+                                        <option value="其他">其他</option>
+                                      </select>
+                                      
+                                      {/* 当选择"其他"时，显示自定义输入框 */}
+                                      {field.value === '其他' && (
+                                        <input
+                                          type="text"
+                                          {...register(`emergency_resources.${index}.custom_resource_name`)}
+                                          className="w-full mt-2 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                                          placeholder="请输入自定义应急物资名称"
+                                        />
+                                      )}
+                                    </>
+                                  )}
                                 />
                               </div>
                               
                               <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                  数量
+                                  数量（单位）
                                 </label>
                                 <input
                                   type="text"
@@ -663,16 +750,30 @@ export default function EnterpriseInfo() {
                               </div>
                             </div>
                             
-                            <div className="mt-4">
-                              <label className="block text-sm font-medium text-gray-700 mb-1">
-                                保管人
-                              </label>
-                              <input
-                                type="text"
-                                {...register(`emergency_resources.${index}.custodian`)}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                                placeholder="请输入保管人"
-                              />
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                  保管人
+                                </label>
+                                <input
+                                  type="text"
+                                  {...register(`emergency_resources.${index}.custodian`)}
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                                  placeholder="请输入保管人"
+                                />
+                              </div>
+                              
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                  保管人联系方式
+                                </label>
+                                <input
+                                  type="text"
+                                  {...register(`emergency_resources.${index}.custodian_contact`)}
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                                  placeholder="请输入保管人联系方式"
+                                />
+                              </div>
                             </div>
                           </div>
                         ))}
@@ -742,11 +843,45 @@ export default function EnterpriseInfo() {
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
                                   组织机构名称
                                 </label>
-                                <input
-                                  type="text"
-                                  {...register(`emergency_orgs.${index}.org_name`)}
-                                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                                  placeholder="请输入组织机构名称"
+                                <Controller
+                                  name={`emergency_orgs.${index}.org_name`}
+                                  control={control}
+                                  render={({ field }) => (
+                                    <>
+                                      <select
+                                        value={field.value}
+                                        onChange={(e) => {
+                                          const value = e.target.value;
+                                          field.onChange(value);
+                                          // 如果选择"其他"，则清空自定义输入
+                                          if (value !== '其他') {
+                                            setValue(`emergency_orgs.${index}.custom_org_name`, '');
+                                          }
+                                        }}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                                      >
+                                        <option value="">请选择</option>
+                                        <option value="总指挥">总指挥</option>
+                                        <option value="副总指挥">副总指挥</option>
+                                        <option value="应急指挥办公室">应急指挥办公室</option>
+                                        <option value="环境保护组">环境保护组</option>
+                                        <option value="消防应急组">消防应急组</option>
+                                        <option value="警戒疏散组">警戒疏散组</option>
+                                        <option value="伤员救护组">伤员救护组</option>
+                                        <option value="其他">其他</option>
+                                      </select>
+                                    
+                                      {/* 当选择"其他"时，显示自定义输入框 */}
+                                      {field.value === '其他' && (
+                                        <input
+                                          type="text"
+                                          {...register(`emergency_orgs.${index}.custom_org_name`)}
+                                          className="w-full mt-2 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                                          placeholder="请输入自定义组织机构名称"
+                                        />
+                                      )}
+                                    </>
+                                  )}
                                 />
                               </div>
                               
@@ -778,15 +913,27 @@ export default function EnterpriseInfo() {
                               
                               <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                  职责说明
+                                  企业对应部门
                                 </label>
                                 <input
                                   type="text"
-                                  {...register(`emergency_orgs.${index}.duties`)}
+                                  {...register(`emergency_orgs.${index}.department`)}
                                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-                                  placeholder="请输入职责说明"
+                                  placeholder="请输入企业对应部门"
                                 />
                               </div>
+                            </div>
+                            
+                            <div className="mt-4">
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                企业24小时值班电话
+                              </label>
+                              <input
+                                type="text"
+                                {...register(`emergency_orgs.${index}.duty_phone`)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                                placeholder="请输入企业24小时值班电话"
+                              />
                             </div>
                           </div>
                         ))}
@@ -798,6 +945,136 @@ export default function EnterpriseInfo() {
                         >
                           <PlusIcon className="h-5 w-5 inline mr-2" />
                           添加应急组织
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* 外部应急救援通讯方式 */}
+            <div className="border border-gray-200 rounded-lg overflow-hidden">
+              <button
+                type="button"
+                className="w-full px-6 py-4 bg-gray-50 flex items-center justify-between text-left hover:bg-gray-100 transition-colors"
+                onClick={() => toggleSection('external_contacts')}
+              >
+                <h2 className="text-lg font-semibold text-gray-900">外部应急救援通讯方式</h2>
+                {expandedSections.external_contacts ? (
+                  <ChevronUpIcon className="h-5 w-5 text-gray-500" />
+                ) : (
+                  <ChevronDownIcon className="h-5 w-5 text-gray-500" />
+                )}
+              </button>
+              
+              {expandedSections.external_contacts && (
+                <div className="p-6">
+                  <div className="space-y-4">
+                    {externalContactFields.length === 0 ? (
+                      <div className="text-center py-8 text-gray-500">
+                        <p>暂无外部应急救援通讯方式信息</p>
+                        <button
+                          type="button"
+                          onClick={addExternalContact}
+                          className="mt-2 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+                        >
+                          <PlusIcon className="h-4 w-4 mr-2" />
+                          添加外部应急救援通讯方式
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        {externalContactFields.map((field, index) => (
+                          <div key={field.id} className="border border-gray-200 rounded-lg p-4">
+                            <div className="flex justify-between items-center mb-4">
+                              <h3 className="text-md font-medium text-gray-900">外部应急救援通讯方式 {index + 1}</h3>
+                              <button
+                                type="button"
+                                onClick={() => removeExternalContact(index)}
+                                className="text-red-600 hover:text-red-800"
+                              >
+                                <TrashIcon className="h-5 w-5" />
+                              </button>
+                            </div>
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                  单位名称
+                                </label>
+                                <Controller
+                                  name={`external_emergency_contacts.${index}.unit_name`}
+                                  control={control}
+                                  render={({ field }) => (
+                                    <>
+                                      <select
+                                        value={field.value}
+                                        onChange={(e) => {
+                                          const value = e.target.value;
+                                          field.onChange(value);
+                                          // 根据选择的单位自动填充联系方式
+                                          if (value === '消防') {
+                                            setValue(`external_emergency_contacts.${index}.contact_method`, '119');
+                                          } else if (value === '报警服务') {
+                                            setValue(`external_emergency_contacts.${index}.contact_method`, '110');
+                                          } else if (value === '医疗急救中心') {
+                                            setValue(`external_emergency_contacts.${index}.contact_method`, '120');
+                                          } else if (value === '环保举报热线') {
+                                            setValue(`external_emergency_contacts.${index}.contact_method`, '12369');
+                                          } else {
+                                            setValue(`external_emergency_contacts.${index}.contact_method`, '');
+                                          }
+                                          // 清空自定义输入
+                                          setValue(`external_emergency_contacts.${index}.custom_unit_name`, '');
+                                        }}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                                      >
+                                        <option value="">请选择</option>
+                                        <option value="消防">消防</option>
+                                        <option value="报警服务">报警服务</option>
+                                        <option value="医疗急救中心">医疗急救中心</option>
+                                        <option value="环保举报热线">环保举报热线</option>
+                                        <option value="其他">其他</option>
+                                      </select>
+                                      
+                                      {/* 当选择"其他"时，显示自定义输入框 */}
+                                      {field.value === '其他' && (
+                                        <input
+                                          type="text"
+                                          {...register(`external_emergency_contacts.${index}.custom_unit_name`)}
+                                          className="w-full mt-2 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                                          placeholder="请输入自定义单位名称"
+                                        />
+                                      )}
+                                    </>
+                                  )}
+                                />
+                              </div>
+                              
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                  通讯方式
+                                </label>
+                                <input
+                                  type="text"
+                                  {...register(`external_emergency_contacts.${index}.contact_method`)}
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                                  placeholder="请输入通讯方式"
+                                  readOnly
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                        
+                        <button
+                          type="button"
+                          onClick={addExternalContact}
+                          className="w-full py-2 border-2 border-dashed border-gray-300 rounded-md text-gray-600 hover:border-primary hover:text-primary transition-colors"
+                        >
+                          <PlusIcon className="h-5 w-5 inline mr-2" />
+                          添加外部应急救援通讯方式
                         </button>
                       </>
                     )}

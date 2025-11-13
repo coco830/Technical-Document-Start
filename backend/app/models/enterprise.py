@@ -20,18 +20,19 @@ class EnterpriseInfo(Base):
     enterprise_name = Column(String(255), nullable=False, comment="企业名称")
     address = Column(String(500), comment="企业地址")
     industry = Column(String(100), comment="所属行业")
-    contact_person = Column(String(100), comment="联系人")
-    phone = Column(String(50), comment="联系电话")
-    employee_count = Column(String(50), comment="员工人数")
-    main_products = Column(Text, comment="主要产品")
-    annual_output = Column(Text, comment="年产量")
-    description = Column(Text, comment="企业简介")
+    legal_representative = Column(String(100), comment="法定代表人")
+    contact_phone = Column(String(50), comment="联系电话")
+    fax = Column(String(50), comment="传真")
+    email = Column(String(100), comment="电子邮箱")
+    overview = Column(Text, comment="企业概况")
+    risk_level = Column(String(50), comment="风险级别")
     
     # 环保手续信息
     env_assessment_no = Column(String(255), comment="环评批复编号")
     acceptance_no = Column(String(255), comment="验收文件编号")
     discharge_permit_no = Column(String(255), comment="排污许可证编号")
-    env_dept = Column(String(255), comment="环保主管部门")
+    has_emergency_plan = Column(String(10), comment="是否有历史应急预案")  # 有/无
+    emergency_plan_code = Column(String(100), comment="历史应急预案编号")  # 仅当有预案时填写
     
     # 危险化学品信息 (JSON格式存储)
     hazardous_materials = Column(JSON, comment="危险化学品信息列表")
@@ -41,6 +42,9 @@ class EnterpriseInfo(Base):
     
     # 应急组织信息 (JSON格式存储)
     emergency_orgs = Column(JSON, comment="应急组织信息列表")
+    
+    # 外部应急救援通讯方式 (JSON格式存储)
+    external_emergency_contacts = Column(JSON, comment="外部应急救援通讯方式列表")
     
     # 时间戳
     created_at = Column(DateTime(timezone=True), server_default=func.now(), comment="创建时间")

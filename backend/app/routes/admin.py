@@ -14,7 +14,7 @@ from datetime import datetime
 from ..database import get_db
 from ..models.user import User, UserRole
 from ..utils.auth import get_current_admin_user, get_password_hash, get_password_hash
-from ..utils.pagination import paginate_query, PaginatedResponse
+from ..utils.pagination import optimize_offset_pagination, PaginatedResponse
 
 logger = logging.getLogger(__name__)
 
@@ -73,7 +73,7 @@ class UserStats(BaseModel):
     new_users_this_month: int
 
 
-@router.get("/users", response_model=PaginatedResponse[UserResponse])
+@router.get("/users")
 async def list_users(
     page: int = Query(1, ge=1, description="页码"),
     size: int = Query(20, ge=1, le=100, description="每页数量"),
@@ -129,7 +129,9 @@ async def list_users(
         query = query.order_by(User.created_at.desc())
         
         # 分页
-        result = paginate_query(query, page, size)
+        from ..utils.pagination import PaginationParams
+        pagination_params = PaginationParams(page=page, page_size=size)
+        result = optimize_offset_pagination(query, pagination_params, db)
         
         logger.info(f"管理员 {current_user.id} 查询用户列表，页码: {page}, 每页: {size}")
         

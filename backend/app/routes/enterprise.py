@@ -32,12 +32,11 @@ def convert_enterprise_to_response(enterprise: EnterpriseInfo) -> EnterpriseInfo
             enterprise_name=enterprise.enterprise_name,
             address=enterprise.address,
             industry=enterprise.industry,
-            contact_person=enterprise.contact_person,
-            phone=enterprise.phone,
-            employee_count=enterprise.employee_count,
-            main_products=enterprise.main_products,
-            annual_output=enterprise.annual_output,
-            description=enterprise.description
+            legal_representative=enterprise.legal_representative,
+            contact_phone=enterprise.contact_phone,
+            fax=enterprise.fax,
+            email=enterprise.email,
+            overview=enterprise.overview
         ),
         env_permits=EnvPermitsResponse(
             env_assessment_no=enterprise.env_assessment_no,
@@ -112,12 +111,11 @@ async def create_enterprise_info(
             enterprise_name=enterprise_data.enterprise_basic.enterprise_name,
             address=enterprise_data.enterprise_basic.address,
             industry=enterprise_data.enterprise_basic.industry,
-            contact_person=enterprise_data.enterprise_basic.contact_person,
-            phone=enterprise_data.enterprise_basic.phone,
-            employee_count=enterprise_data.enterprise_basic.employee_count,
-            main_products=enterprise_data.enterprise_basic.main_products,
-            annual_output=enterprise_data.enterprise_basic.annual_output,
-            description=enterprise_data.enterprise_basic.description,
+            legal_representative=enterprise_data.enterprise_basic.legal_representative,
+            contact_phone=enterprise_data.enterprise_basic.contact_phone,
+            fax=enterprise_data.enterprise_basic.fax,
+            email=enterprise_data.enterprise_basic.email,
+            overview=enterprise_data.enterprise_basic.overview,
             
             # 环保手续信息
             env_assessment_no=enterprise_data.env_permits.env_assessment_no,

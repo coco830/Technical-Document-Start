@@ -108,8 +108,8 @@ def get_current_user(
     return user
 
 def get_current_active_user(
-    current_user: User = Depends(get_current_user)
-) -> User:
+    current_user = Depends(get_current_user)
+):
     """获取当前活跃用户"""
     if not current_user.is_active:
         raise HTTPException(
@@ -118,10 +118,9 @@ def get_current_active_user(
         )
     return current_user
 
-
 def get_current_admin_user(
-    current_user: User = Depends(get_current_active_user)
-) -> User:
+    current_user = Depends(get_current_active_user)
+):
     """获取当前管理员用户"""
     if not current_user.is_admin:
         raise HTTPException(
@@ -130,10 +129,9 @@ def get_current_admin_user(
         )
     return current_user
 
-
 def get_current_moderator_user(
-    current_user: User = Depends(get_current_active_user)
-) -> User:
+    current_user = Depends(get_current_active_user)
+):
     """获取当前版主或管理员用户"""
     if not current_user.is_moderator:
         raise HTTPException(
@@ -141,7 +139,6 @@ def get_current_moderator_user(
             detail="需要版主或管理员权限"
         )
     return current_user
-
 
 def require_role(required_role: str):
     """
@@ -153,7 +150,7 @@ def require_role(required_role: str):
     Returns:
         依赖装饰器
     """
-    def role_checker(current_user: User = Depends(get_current_active_user)) -> User:
+    def role_checker(current_user = Depends(get_current_active_user)):
         from app.models.user import UserRole
         
         role_mapping = {
@@ -178,8 +175,7 @@ def require_role(required_role: str):
     
     return role_checker
 
-
-def require_admin(user: User) -> bool:
+def require_admin(user) -> bool:
     """
     检查用户是否为管理员（向后兼容函数）
     
