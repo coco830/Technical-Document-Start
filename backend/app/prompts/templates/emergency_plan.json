@@ -1,54 +1,389 @@
 {
-  "document_type": "突发环境事件应急预案",
-  "description": "环保应急预案标准模板",
-  "sections": [
-    {
-      "id": "1",
-      "title": "总则",
-      "prompt": "生成应急预案的总则部分，包括编制目的、依据、原则等内容。",
-      "variables": []
+  "title": "EnterpriseFullSchema",
+  "type": "object",
+  "properties": {
+    "enterprise_id": {
+      "type": "string",
+      "description": "系统内部ID"
     },
-    {
-      "id": "2",
-      "title": "企业概况",
-      "prompt": "根据企业的基本信息生成企业概况内容。",
-      "variables": ["enterprise_name", "industry_type", "address", "main_products", "employees_count"]
+
+    "basic_info": {
+      "type": "object",
+      "properties": {
+        "company_name": { "type": "string" },
+        "company_short_name": { "type": "string" },
+        "credit_code": { "type": "string" },
+        "industry_category": { "type": "string" },
+        "industry_subcategory": { "type": "string" },
+        "park_name": { "type": "string" },
+        "risk_level": { "type": "string", "enum": ["一般", "较大", "重大", "未知"] },
+
+        "address": {
+          "type": "object",
+          "properties": {
+            "province": { "type": "string" },
+            "city": { "type": "string" },
+            "district": { "type": "string" },
+            "detail": { "type": "string" },
+            "longitude": { "type": "number" },
+            "latitude": { "type": "number" }
+          }
+        },
+
+        "contacts": {
+          "type": "object",
+          "properties": {
+            "legal_person": {
+              "type": "object",
+              "properties": {
+                "name": { "type": "string" },
+                "position": { "type": "string" },
+                "mobile": { "type": "string" }
+              }
+            },
+            "environmental_manager": {
+              "type": "object",
+              "properties": {
+                "name": { "type": "string" },
+                "position": { "type": "string" },
+                "mobile": { "type": "string" }
+              }
+            },
+            "emergency_contact": {
+              "type": "object",
+              "properties": {
+                "name": { "type": "string" },
+                "position": { "type": "string" },
+                "mobile": { "type": "string" }
+              }
+            },
+            "office_phone": { "type": "string" },
+            "email": { "type": "string" }
+          }
+        },
+
+        "operation": {
+          "type": "object",
+          "properties": {
+            "established_date": { "type": "string" },
+            "production_status": { "type": "string", "enum": ["在产", "停产", "在建"] },
+            "employees_total": { "type": "number" },
+            "employees_production": { "type": "number" },
+            "work_shift": { "type": "string" },
+            "work_hours_per_shift": { "type": "number" },
+            "operating_days_per_year": { "type": "number" },
+            "land_area": { "type": "number" },
+            "building_area": { "type": "number" },
+            "investment_total": { "type": "number" },
+            "investment_environmental": { "type": "number" },
+            "company_intro": { "type": "string" }
+          }
+        }
+      }
     },
-    {
-      "id": "3",
-      "title": "环境风险分析",
-      "prompt": "结合危险物质和周边环境信息生成风险识别与分级说明。",
-      "variables": ["hazardous_materials", "storage_amounts", "surrounding_receptors"]
+
+    "production_process": {
+      "type": "object",
+      "properties": {
+        "products": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "product_name": { "type": "string" },
+              "product_type": { "type": "string" },
+              "design_capacity": { "type": "string" },
+              "actual_output": { "type": "string" }
+            }
+          }
+        },
+
+        "raw_materials": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "cas_no": { "type": "string" },
+              "material_category": { "type": "string" },
+              "is_hazardous": { "type": "boolean" },
+              "hazard_types": { "type": "array", "items": { "type": "string" } },
+              "annual_usage": { "type": "number" },
+              "max_storage": { "type": "number" },
+              "used_in_process": { "type": "string" },
+              "phase": { "type": "string" }
+            }
+          }
+        },
+
+        "energy": {
+          "type": "object",
+          "properties": {
+            "water_consumption": { "type": "number" },
+            "electricity_consumption": { "type": "number" },
+            "natural_gas": { "type": "number" },
+            "other_energy": { "type": "string" }
+          }
+        },
+
+        "process_description": {
+          "type": "string"
+        },
+
+        "storage_units": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "unit_name": { "type": "string" },
+              "facility_type": { "type": "string" },
+              "stored_materials": {
+                "type": "array",
+                "items": { "type": "string" }
+              },
+              "capacity": { "type": "number" },
+              "max_actual_storage": { "type": "number" },
+              "location_desc": { "type": "string" },
+              "anti_leak_measures": { "type": "string" }
+            }
+          }
+        },
+
+        "hazardous_chemicals": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "chemical_name": { "type": "string" },
+              "cas_no": { "type": "string" },
+              "hazard_category": { "type": "string" },
+              "max_storage": { "type": "number" },
+              "phase": { "type": "string" },
+              "is_major_source": { "type": "boolean" }
+            }
+          }
+        },
+
+        "hazardous_waste": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "waste_name": { "type": "string" },
+              "hw_category": { "type": "string" },
+              "waste_code": { "type": "string" },
+              "source_process": { "type": "string" },
+              "hazard_characteristics": {
+                "type": "array",
+                "items": { "type": "string" }
+              },
+              "max_storage": { "type": "number" },
+              "storage_location": { "type": "string" },
+              "disposal_company": { "type": "string" }
+            }
+          }
+        }
+      }
     },
-    {
-      "id": "4",
-      "title": "应急组织机构及职责",
-      "prompt": "根据组织结构数据生成指挥体系及职责说明。",
-      "variables": ["emergency_team_structure"]
+
+    "environment_info": {
+      "type": "object",
+      "properties": {
+        "nearby_receivers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "receiver_type": { "type": "string" },
+              "name": { "type": "string" },
+              "direction": { "type": "string" },
+              "distance_m": { "type": "number" },
+              "population_or_scale": { "type": "string" }
+            }
+          }
+        },
+
+        "wastewater": {
+          "type": "object",
+          "properties": {
+            "production_wastewater": { "type": "boolean" },
+            "domestic_wastewater": { "type": "boolean" },
+            "treatment_facilities": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "facility_name": { "type": "string" },
+                  "process_type": { "type": "string" },
+                  "design_capacity": { "type": "number" },
+                  "actual_capacity": { "type": "number" },
+                  "discharge_destination": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+
+        "waste_gas": {
+          "type": "object",
+          "properties": {
+            "organized_sources": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "source_name": { "type": "string" },
+                  "main_pollutants": { "type": "array", "items": { "type": "string" } },
+                  "treatment_method": { "type": "string" },
+                  "stack_height": { "type": "number" }
+                }
+              }
+            },
+            "fugitive_sources_desc": { "type": "string" }
+          }
+        },
+
+        "noise": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "noise_source": { "type": "string" },
+              "location": { "type": "string" },
+              "control_measures": { "type": "string" }
+            }
+          }
+        },
+
+        "solid_waste": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "waste_name": { "type": "string" },
+              "waste_type": { "type": "string" },
+              "annual_production": { "type": "number" },
+              "storage_method": { "type": "string" },
+              "disposal_method": { "type": "string" }
+            }
+          }
+        }
+      }
     },
-    {
-      "id": "5",
-      "title": "应急资源与保障",
-      "prompt": "生成企业内部应急物资、设备及外部支援单位的说明。",
-      "variables": ["emergency_resources"]
+
+    "compliance_info": {
+      "type": "object",
+      "properties": {
+        "eia": {
+          "type": "object",
+          "properties": {
+            "project_name": { "type": "string" },
+            "approval_document_no": { "type": "string" },
+            "approval_date": { "type": "string" },
+            "consistency_status": { "type": "string" }
+          }
+        },
+        "acceptance": {
+          "type": "object",
+          "properties": {
+            "type": { "type": "string" },
+            "document_no": { "type": "string" },
+            "date": { "type": "string" }
+          }
+        },
+        "pollutant_permit": {
+          "type": "object",
+          "properties": {
+            "permit_no": { "type": "string" },
+            "authority": { "type": "string" },
+            "valid_from": { "type": "string" },
+            "valid_to": { "type": "string" },
+            "permitted_pollutants": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          }
+        },
+        "hazardous_waste_contracts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "company_name": { "type": "string" },
+              "permit_no": { "type": "string" },
+              "contract_from": { "type": "string" },
+              "contract_to": { "type": "string" }
+            }
+          }
+        }
+      }
     },
-    {
-      "id": "6",
-      "title": "应急响应程序",
-      "prompt": "生成各类突发事件的响应流程与防控措施。",
-      "variables": ["incident_types", "response_steps"]
-    },
-    {
-      "id": "7",
-      "title": "信息报告与后期处置",
-      "prompt": "生成事故报告程序与善后措施。",
-      "variables": []
-    },
-    {
-      "id": "8",
-      "title": "附录",
-      "prompt": "生成附录部分，包括表格、清单、联系方式等。",
-      "variables": ["appendices"]
+
+    "emergency_resources": {
+      "type": "object",
+      "properties": {
+        "contact_list_internal": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "role": { "type": "string" },
+              "name": { "type": "string" },
+              "department": { "type": "string" },
+              "mobile": { "type": "string" }
+            }
+          }
+        },
+
+        "contact_list_external": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "unit_type": { "type": "string" },
+              "unit_name": { "type": "string" },
+              "phone": { "type": "string" }
+            }
+          }
+        },
+
+        "emergency_materials": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "material_name": { "type": "string" },
+              "unit": { "type": "string" },
+              "quantity": { "type": "number" },
+              "purpose": { "type": "string" },
+              "storage_location": { "type": "string" },
+              "keeper": { "type": "string" }
+            }
+          }
+        },
+
+        "emergency_team": {
+          "type": "object",
+          "properties": {
+            "has_internal_team": { "type": "boolean" },
+            "team_size": { "type": "number" },
+            "team_structure": { "type": "string" }
+          }
+        },
+
+        "emergency_drills": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "drill_date": { "type": "string" },
+              "drill_type": { "type": "string" },
+              "scenario": { "type": "string" },
+              "participants": { "type": "string" }
+            }
+          }
+        }
+      }
     }
-  ]
+  }
 }
