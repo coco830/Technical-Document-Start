@@ -656,11 +656,11 @@
 
 2.1企业概况
 
-{{ enterprise_overview or '根据企业实际情况简介企业基本情况，包括企业成立时间，环保投资，主要建设内容、主要生产能力、主要产品名称、工作制度等情况。' }}
+{{ ai_sections.enterprise_overview }}
 
 2.1.1地理位置及交通
 
-{{ location_description or '根据企业具体情况介绍企业地理位置及周边交通情况，应明确企业经纬度坐标。' }}
+{{ ai_sections.location_description }}
 
 企业经纬度：东经{{ longitude or 'xxx' }}，北纬{{ latitude or 'xxx' }}
 
@@ -668,15 +668,15 @@
 
 1、地形地貌
 
-{{ terrain_description or '根据企业所在区域，介绍项目区域地形地貌。' }}
+{{ ai_sections.terrain_description }}
 
 2、气象条件
 
-{{ weather_description or '根据企业所在区域，介绍项目区域气象条件。' }}
+{{ ai_sections.weather_description }}
 
 3、水文
 
-{{ hydrology_description or '根据企业所在区域，介绍项目区域水文，并明确项目周边最近地表水。' }}
+{{ ai_sections.hydrology_description }}
 
 2.1.3周边环境
 
@@ -718,11 +718,11 @@
 
 2.1.3企业环保工作情况
 
-{{ environmental_work or '对企业环保手续进行简介，包括环评、环评批复、验收、历史应急预案、排污许可证等手续情况。' }}
+{{ ai_sections.environmental_work }}
 
 2.1.4企业建设布置情况
 
-{{ construction_layout or '根据企业具体建设情况简述企业平面布置情况。' }}
+{{ ai_sections.construction_layout }}
 
 2.2企业生产情况概况
 
@@ -754,7 +754,7 @@
 
 根据企业实际运营情况并结合企业环评、验收手续介绍企业运营过程生产工艺。
 
-{{ production_process_description or '请描述企业主要生产工艺流程...' }}
+{{ ai_sections.production_process_description }}
 
 2.2.5主要生产设备装置
 
@@ -1148,7 +1148,7 @@
 
 （8）环境风险源防范：
 
-根据分析出的企业可能发生的突发环境事件分别提出各事件的防范措施。
+{{ ai_sections.risk_prevention_measures }}
 
 
 
@@ -1372,7 +1372,7 @@
 
 7.4.1.2现场应急处置措施
 
-根据分析出的企业可能发生的突发环境事件分别提出各事件的应急处置措施。
+{{ ai_sections.emergency_response_measures }}
 
 
 

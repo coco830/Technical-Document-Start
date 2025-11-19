@@ -1008,3 +1008,30 @@ class EnterpriseInfoList(BaseModel):
     page: int
     page_size: int
     total_pages: int
+
+
+class EnterpriseDataRequest(BaseModel):
+    """企业数据请求模型"""
+    # 包含前端表单提交的所有字段，符合emergency_plan.json结构
+    basic_info: Optional[dict] = Field(None, description="企业基本信息")
+    production_process: Optional[dict] = Field(None, description="生产过程与风险物质")
+    environment_info: Optional[dict] = Field(None, description="环境信息")
+    compliance_info: Optional[dict] = Field(None, description="环保手续与管理制度")
+    emergency_resources: Optional[dict] = Field(None, description="应急资源信息")
+    # 可以包含其他需要覆盖或补充的字段
+    additional_data: Optional[dict] = Field(None, description="额外的数据")
+
+
+class DocumentData(BaseModel):
+    """文档数据模型"""
+    title: str = Field(..., description="文档标题")
+    content: str = Field(..., description="HTML内容")
+    word_count: int = Field(..., description="字数统计")
+
+
+class DocumentGenerationResponse(BaseModel):
+    """文档生成响应模型"""
+    success: bool = Field(..., description="是否成功")
+    message: str = Field(..., description="响应消息")
+    data: Optional[dict] = Field(None, description="响应数据")
+    errors: List[str] = Field(default_factory=list, description="错误信息列表")

@@ -5,7 +5,9 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import and_, or_, desc
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
+from datetime import datetime
+import json
 
 from app.database import get_db
 from app.models.enterprise import EnterpriseInfo
@@ -33,11 +35,14 @@ from app.schemas.enterprise import (
     # 步骤5：应急管理与资源相关的响应模型
     EmergencyOrganizationAndContactsResponse, EmergencyMaterialsAndEquipmentResponse,
     EmergencyTeamAndSupportResponse, DrillsAndTrainingRecordsResponse,
-    EmergencyResourceSurveyMetadataResponse
+    EmergencyResourceSurveyMetadataResponse,
+    # 新增的文档生成相关模型
+    EnterpriseDataRequest, DocumentGenerationResponse, DocumentData
 )
 from app.utils.auth import get_current_user
 from app.utils.pagination import get_pagination_params, paginate_query
 from app.utils.error_handler import handle_error, ErrorCategory
+from app.services.document_generator import document_generator
 
 router = APIRouter(prefix="/enterprise", tags=["企业信息"])
 
@@ -1228,6 +1233,301 @@ async def delete_enterprise_info(
             e,
             context={"user_id": current_user.id, "info_id": info_id, "operation": "delete_enterprise_info"},
             user_message="删除企业信息失败"
+        )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=error_info.user_message
+        )
+
+
+def convert_enterprise_to_emergency_plan_format(enterprise: EnterpriseInfo, additional_data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    """
+    将企业信息模型转换为emergency_plan.json格式的数据
+    
+    Args:
+        enterprise: 企业信息模型
+        additional_data: 额外的数据，用于覆盖或补充数据库中的信息
+    
+    Returns:
+        符合emergency_plan.json结构的数据字典
+    """
+    # 创建基础数据结构
+    data = {
+        "enterprise_id": str(enterprise.id),
+        "basic_info": {},
+        "production_process": {},
+        "environment_info": {},
+        "compliance_info": {},
+        "emergency_resources": {}
+    }
+    
+    # 填充基本信息
+    data["basic_info"] = {
+        "company_name": enterprise.enterprise_name,
+        "company_short_name": enterprise.enterprise_name,
+        "credit_code": enterprise.unified_social_credit_code,
+        "industry_category": enterprise.industry,
+        "industry_subcategory": enterprise.industry_subdivision,
+        "park_name": enterprise.park_name,
+        "risk_level": enterprise.risk_level or "未知",
+        "address": {
+            "province": enterprise.province,
+            "city": enterprise.city,
+            "district": enterprise.district,
+            "detail": enterprise.detailed_address,
+            "longitude": float(enterprise.longitude) if enterprise.longitude else None,
+            "latitude": float(enterprise.latitude) if enterprise.latitude else None
+        },
+        "contacts": {
+            "legal_person": {
+                "name": enterprise.legal_representative_name,
+                "position": "法定代表人",
+                "mobile": enterprise.legal_representative_phone
+            },
+            "environmental_manager": {
+                "name": enterprise.env_officer_name,
+                "position": enterprise.env_officer_position,
+                "mobile": enterprise.env_officer_phone
+            },
+            "emergency_contact": {
+                "name": enterprise.emergency_contact_name,
+                "position": enterprise.emergency_contact_position,
+                "mobile": enterprise.emergency_contact_phone
+            },
+            "office_phone": enterprise.landline_phone,
+            "email": enterprise.enterprise_email
+        },
+        "operation": {
+            "established_date": enterprise.establishment_date,
+            "production_status": enterprise.production_status,
+            "employees_total": enterprise.total_employees,
+            "employees_production": enterprise.production_staff,
+            "work_shift": enterprise.shift_system,
+            "work_hours_per_shift": float(enterprise.daily_work_hours) if enterprise.daily_work_hours else None,
+            "operating_days_per_year": enterprise.annual_work_days,
+            "land_area": enterprise.land_area,
+            "building_area": enterprise.building_area,
+            "investment_total": enterprise.total_investment,
+            "investment_environmental": enterprise.env_investment,
+            "company_intro": enterprise.enterprise_intro
+        }
+    }
+    
+    # 填充生产过程信息
+    data["production_process"] = {
+        "products": enterprise.products_info or [],
+        "raw_materials": enterprise.raw_materials_info or [],
+        "energy": enterprise.energy_usage or {},
+        "process_description": enterprise.production_process.get("process_description") if enterprise.production_process else "",
+        "storage_units": enterprise.storage_facilities or [],
+        "hazardous_chemicals": enterprise.hazardous_chemicals or [],
+        "hazardous_waste": enterprise.hazardous_waste or []
+    }
+    
+    # 填充环境信息
+    data["environment_info"] = {
+        "nearby_receivers": enterprise.environmental_risk_receptors or [],
+        "wastewater": {
+            "production_wastewater": enterprise.has_production_wastewater == "是" if enterprise.has_production_wastewater else False,
+            "domestic_wastewater": enterprise.has_domestic_sewage == "是" if enterprise.has_domestic_sewage else False,
+            "treatment_facilities": enterprise.wastewater_treatment_facilities or []
+        },
+        "waste_gas": {
+            "organized_sources": enterprise.organized_waste_gas_sources or [],
+            "fugitive_sources_desc": enterprise.unorganized_waste_gas.get("has_obvious_unorganized_gas") if enterprise.unorganized_waste_gas else ""
+        },
+        "noise": enterprise.main_noise_sources or [],
+        "solid_waste": enterprise.general_solid_wastes or []
+    }
+    
+    # 填充合规信息
+    data["compliance_info"] = {
+        "eia": {
+            "project_name": enterprise.eia_project_name,
+            "approval_document_no": enterprise.eia_document_number,
+            "approval_date": enterprise.eia_approval_date,
+            "consistency_status": enterprise.eia_consistency_status
+        },
+        "acceptance": {
+            "type": enterprise.acceptance_type,
+            "document_no": enterprise.acceptance_document_number,
+            "date": enterprise.acceptance_date
+        },
+        "pollutant_permit": {
+            "permit_no": enterprise.discharge_permit_number,
+            "authority": enterprise.issuing_authority,
+            "valid_from": enterprise.permit_start_date,
+            "valid_to": enterprise.permit_end_date,
+            "permitted_pollutants": enterprise.permitted_pollutants.split(",") if enterprise.permitted_pollutants else []
+        },
+        "hazardous_waste_contracts": []
+    }
+    
+    # 添加危险废物合同信息
+    if enterprise.hazardous_waste_agreement_unit:
+        data["compliance_info"]["hazardous_waste_contracts"].append({
+            "company_name": enterprise.hazardous_waste_agreement_unit,
+            "permit_no": enterprise.hazardous_waste_unit_permit_number,
+            "contract_from": enterprise.hazardous_waste_agreement_start_date,
+            "contract_to": enterprise.hazardous_waste_agreement_end_date
+        })
+    
+    # 填充应急资源信息
+    data["emergency_resources"] = {
+        "contact_list_internal": enterprise.internal_emergency_contacts or [],
+        "contact_list_external": enterprise.external_emergency_unit_contacts or [],
+        "emergency_materials": enterprise.emergency_materials_list or [],
+        "emergency_team": {
+            "has_internal_team": enterprise.has_internal_rescue_team == "是" if enterprise.has_internal_rescue_team else False,
+            "team_size": enterprise.rescue_team_size or 0,
+            "team_structure": enterprise.team_composition_description
+        },
+        "emergency_drills": enterprise.drill_records or []
+    }
+    
+    # 如果有额外数据，合并到基础数据中
+    if additional_data:
+        # 深度合并数据
+        for key, value in additional_data.items():
+            if key in data and isinstance(data[key], dict) and isinstance(value, dict):
+                data[key].update(value)
+            else:
+                data[key] = value
+    
+    return data
+
+
+def count_words(html_content: str) -> int:
+    """
+    统计HTML内容的字数
+    
+    Args:
+        html_content: HTML字符串
+    
+    Returns:
+        字数统计
+    """
+    # 简单的HTML标签移除和字数统计
+    import re
+    # 移除HTML标签
+    text = re.sub(r'<[^>]+>', '', html_content)
+    # 移除多余的空白字符
+    text = re.sub(r'\s+', ' ', text).strip()
+    # 统计中文字符和单词
+    chinese_chars = len(re.findall(r'[\u4e00-\u9fff]', text))
+    english_words = len(re.findall(r'\b[a-zA-Z]+\b', text))
+    return chinese_chars + english_words
+
+
+@router.post("/{enterprise_id}/generate-docs", response_model=DocumentGenerationResponse)
+async def generate_enterprise_docs(
+    enterprise_id: int,
+    request: EnterpriseDataRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    根据企业ID生成应急预案文档
+    
+    Args:
+        enterprise_id: 企业ID
+        request: 包含企业表单数据的请求体
+        db: 数据库会话
+        current_user: 当前用户
+    
+    Returns:
+        包含三个文档HTML的响应，支持前端tab结构
+    """
+    try:
+        # 查询企业信息
+        enterprise = db.query(EnterpriseInfo).filter(
+            and_(EnterpriseInfo.id == enterprise_id, EnterpriseInfo.user_id == current_user.id)
+        ).first()
+        
+        if not enterprise:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="企业信息不存在"
+            )
+        
+        # 将企业信息转换为emergency_plan.json格式
+        additional_data = request.additional_data or {}
+        if request.basic_info:
+            additional_data["basic_info"] = request.basic_info
+        if request.production_process:
+            additional_data["production_process"] = request.production_process
+        if request.environment_info:
+            additional_data["environment_info"] = request.environment_info
+        if request.compliance_info:
+            additional_data["compliance_info"] = request.compliance_info
+        if request.emergency_resources:
+            additional_data["emergency_resources"] = request.emergency_resources
+        
+        enterprise_data = convert_enterprise_to_emergency_plan_format(enterprise, additional_data)
+        
+        # 使用文档生成服务生成三个文档
+        generation_result = document_generator.generate_all_documents(enterprise_data)
+        
+        if not generation_result["success"]:
+            return DocumentGenerationResponse(
+                success=False,
+                message="文档生成失败",
+                errors=generation_result["errors"]
+            )
+        
+        # 构建响应数据，支持前端tab结构
+        tabs = []
+        
+        # 风险评估报告
+        if generation_result["risk_report"]:
+            tabs.append({
+                "id": "risk_report",
+                "title": "环境风险评估报告",
+                "content": generation_result["risk_report"],
+                "word_count": count_words(generation_result["risk_report"])
+            })
+        
+        # 突发环境事件应急预案
+        if generation_result["emergency_plan"]:
+            tabs.append({
+                "id": "emergency_plan",
+                "title": "突发环境事件应急预案",
+                "content": generation_result["emergency_plan"],
+                "word_count": count_words(generation_result["emergency_plan"])
+            })
+        
+        # 应急资源调查报告
+        if generation_result["resource_report"]:
+            tabs.append({
+                "id": "resource_report",
+                "title": "应急资源调查报告",
+                "content": generation_result["resource_report"],
+                "word_count": count_words(generation_result["resource_report"])
+            })
+        
+        # 构建企业信息
+        enterprise_info = {
+            "id": enterprise.id,
+            "name": enterprise.enterprise_name,
+            "generated_at": datetime.now().isoformat()
+        }
+        
+        return DocumentGenerationResponse(
+            success=True,
+            message="文档生成成功",
+            data={
+                "tabs": tabs,
+                "enterprise_info": enterprise_info
+            }
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        error_info = handle_error(
+            e,
+            context={"user_id": current_user.id, "enterprise_id": enterprise_id, "operation": "generate_enterprise_docs"},
+            user_message="生成企业文档失败"
         )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

@@ -362,7 +362,7 @@
 
 调查过程
 
-{{ investigation_process or '通过分析环境风险评估、应急预案、演练记录、事件处置记录和历史调查、日常管理资料，确定本次调查的目标、对象、范围、方式、计划等，设计调查表格，明确人员和任务。再经过实地查看，确定应急物资、队伍、保障等情况，最终形成本报告。' }}
+{{ ai_sections.investigation_process }}
 
 2.调查结果（调查结果如果为"有"，应附相应调查表）
 
@@ -370,19 +370,19 @@
 
 资源品种：     {{ resource_types or '种' }}；
 
-是否有外部环境应急支持单位：□{{ if has_external_support %}有, {{ external_support_count }}家{% else %}无{% endif %}；
+是否有外部环境应急支持单位：□{% if has_external_support %}有, {{ external_support_count }}家{% else %}无{% endif %}；
 
 3.调查质量控制与管理
 
-是否进行了调查信息审核：□{{ if investigation_reviewed %}有；{% else %}无{% endif %}
+是否进行了调查信息审核：□{% if investigation_reviewed %}有；{% else %}无{% endif %}
 
-是否建立了调查信息档案：□{{ if investigation_archived %}有；{% else %}无{% endif %}
+是否建立了调查信息档案：□{% if investigation_archived %}有；{% else %}无{% endif %}
 
-是否建立了调查更新机制：□{{ if update_mechanism %}有；{% else %}无{% endif %}
+是否建立了调查更新机制：□{% if update_mechanism %}有；{% else %}无{% endif %}
 
 4.资源储备与应急需求匹配的分析结论
 
-□{{ if resource_match == '完全满足' %}完全满足；{% elif resource_match == '满足' %}满足；{% elif resource_match == '基本满足' %}基本满足；{% else %}不能满足{% endif %}
+□{% if resource_match == '完全满足' %}完全满足；{% elif resource_match == '满足' %}满足；{% elif resource_match == '基本满足' %}基本满足；{% else %}不能满足{% endif %}
 
 5.附件
 
@@ -401,19 +401,19 @@
 
 3.2、1企业应急资源差距分析
 
-1、{{ gap_analysis_1 or '救援队伍力量不足' }}
+{{ ai_sections.gap_analysis_1 }}
 
 企业人员不多，发生突发环境事件时参与救援人数有限，一旦发生重大事故（如火灾），应急救援组织不足以应对事态的发展，必须求助外部救援力量。
 
-2、{{ gap_analysis_2 or '救援装备欠缺' }}
+{{ ai_sections.gap_analysis_2 }}
 
 企业内为救援队伍配备防护装备，数量有限，防护装备是为保障救援人员安全的必要物资，企业应在近期进行补充完善。
 
-3、{{ gap_analysis_3 or '救援知识欠缺' }}
+{{ ai_sections.gap_analysis_3 }}
 
 企业的应急救援小组内部分成员可能对整个企业厂区的环境风险、应急救援措施不是特别明晰，所以需要经过专门的培训后才能胜任此工作。
 
-4、{{ gap_analysis_4 or '缺乏突发环境事件应急演练' }}
+{{ ai_sections.gap_analysis_4 }}
 
 企业应该按要求进行应急演练，提升应急救援小组成员及全体企业员工的应急处理水平。
 
@@ -436,7 +436,7 @@
 
 3.4小结
 
-{{ conclusion or '企业环境应急物资、设施（备）与应急救援队伍建设情况基本完备，企业内所用危险物质较多，环境风险概率较大，但企业的人力、物力、财力基本可以满足突发环境事件的应急救援工作要求。' }}
+{{ ai_sections.conclusion }}
 
 下一步工作中，企业将进一步建立健全环境风险隐患排查制度，严格遵守风险源的重点监控制度、主要设备的安全操作规程、岗位操作法、值班制度、巡回检查制度及各类考核奖惩制度等，加强环境风险源的日常检查及管理，继续完善企业应急物资和应急队伍建设，继续完成企业应该具有的各类环保手续，防微杜渐，未雨绸缪，降低环境风险，提高企业应对各类突发环境事件的能力。
 

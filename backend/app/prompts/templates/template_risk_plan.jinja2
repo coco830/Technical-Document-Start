@@ -169,11 +169,11 @@
 
 3.1.1企业概况
 
-{{ enterprise_overview or '根据企业实际情况简介企业基本情况，包括企业成立时间，环保投资，主要建设内容、主要生产能力、主要产品名称、工作制度等情况。' }}
+{{ ai_sections.enterprise_overview }}
 
 3.1.2地理位置及交通
 
-{{ location_description or '根据企业具体情况介绍企业地理位置及周边交通情况，应明确企业经纬度坐标。' }}
+{{ ai_sections.location_description }}
 
 企业经纬度：东经{{ longitude or 'xxx' }}，北纬{{ latitude or 'xxx' }}
 
@@ -181,15 +181,15 @@
 
 1、地形地貌
 
-{{ terrain_description or '根据企业所在区域，介绍项目区域地形地貌。' }}
+{{ ai_sections.terrain_description }}
 
 2、气象条件
 
-{{ weather_description or '根据企业所在区域，介绍项目区域气象条件。' }}
+{{ ai_sections.weather_description }}
 
 3、水文
 
-{{ hydrology_description or '根据企业所在区域，介绍项目区域水文，并明确项目周边最近地表水。' }}
+{{ ai_sections.hydrology_description }}
 
 3.1.4周边环境
 
@@ -303,7 +303,7 @@
 
 根据企业实际运营情况并结合企业环评、验收手续介绍企业运营过程生产工艺。
 
-{{ production_process_description or '请描述企业主要生产工艺流程...' }}
+{{ ai_sections.production_process_description }}
 
 3.4.5主要生产设备装置
 
@@ -331,7 +331,7 @@
 
 3.5 安全生产管理
 
-{{ safety_management_description or '企业紧紧围绕安全生产目标和工作计划开展安全生产工作。已配备了相应的应急救援物资，也制定了相关的措施等。' }}
+{{ ai_sections.safety_management_description }}
 
 3.6 现有环境风险防控与应急措施情况
 
@@ -656,19 +656,19 @@ Wp=Q1t1+Q2t2+Q3t3
 
 4.4.1水环境影响分析
 
-{{ water_environment_impact or enterprise_name + '实现雨污分流，雨水经雨水沟收集外排至市政雨水管网。' }}
+{{ ai_sections.water_environment_impact }}
 
 4.4.2大气环境影响分析
 
-{{ air_environment_impact or '企业在运营过程中产生的废气主要来源于……' }}
+{{ ai_sections.air_environment_impact }}
 
 4.4.3噪声环境影响分析
 
-{{ noise_environment_impact or '企业的主要噪声……。' }}
+{{ ai_sections.noise_environment_impact }}
 
 4.4.4固体废物影响分析
 
-{{ solid_waste_impact or '企业产生的固体废弃物主要有……' }}
+{{ ai_sections.solid_waste_impact }}
 
 5现有环境风险防控和应急措施差距分析
 
