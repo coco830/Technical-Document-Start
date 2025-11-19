@@ -1,0 +1,334 @@
+"""
+文档生成功能测试脚本
+"""
+
+import json
+import sys
+import os
+from pathlib import Path
+
+# 添加项目根目录到Python路径
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from app.services.document_generator import document_generator
+
+def test_document_generation():
+    """测试文档生成功能"""
+    
+    # 加载测试数据
+    test_data_path = Path(__file__).parent / "app" / "prompts" / "templates" / "emergency_plan.json"
+    
+    try:
+        with open(test_data_path, 'r', encoding='utf-8') as f:
+            test_data = json.load(f)
+    except Exception as e:
+        print(f"加载测试数据失败: {str(e)}")
+        return False
+    
+    # 添加一些测试数据
+    test_data.update({
+        "basic_info": {
+            "company_name": "测试企业有限公司",
+            "company_short_name": "测试企业",
+            "credit_code": "91110000000000000X",
+            "industry_category": "制造业",
+            "industry_subcategory": "化工产品制造",
+            "park_name": "测试工业园区",
+            "risk_level": "一般",
+            "address": {
+                "province": "北京市",
+                "city": "北京市",
+                "district": "海淀区",
+                "detail": "测试街道123号",
+                "longitude": 116.404,
+                "latitude": 39.915
+            },
+            "contacts": {
+                "legal_person": {
+                    "name": "张三",
+                    "position": "法定代表人",
+                    "mobile": "13800138000"
+                },
+                "environmental_manager": {
+                    "name": "李四",
+                    "position": "环保负责人",
+                    "mobile": "13900139000"
+                },
+                "emergency_contact": {
+                    "name": "王五",
+                    "position": "应急联系人",
+                    "mobile": "13700137000"
+                },
+                "office_phone": "010-12345678",
+                "email": "contact@test.com"
+            },
+            "operation": {
+                "established_date": "2020-01-01",
+                "production_status": "在产",
+                "employees_total": 100,
+                "employees_production": 80,
+                "work_shift": "三班倒",
+                "work_hours_per_shift": 8,
+                "operating_days_per_year": 300,
+                "land_area": 10000,
+                "building_area": 5000,
+                "investment_total": 10000000,
+                "investment_environmental": 1000000,
+                "company_intro": "测试企业是一家专业从事化工产品制造的企业"
+            }
+        },
+        "production_process": {
+            "products": [
+                {
+                    "product_name": "测试产品A",
+                    "product_type": "化工产品",
+                    "design_capacity": "1000吨/年",
+                    "actual_output": "800吨/年"
+                }
+            ],
+            "raw_materials": [
+                {
+                    "name": "原料A",
+                    "cas_no": "123-45-6",
+                    "material_category": "有机原料",
+                    "is_hazardous": True,
+                    "hazard_types": ["易燃", "有毒"],
+                    "annual_usage": 500,
+                    "max_storage": 50,
+                    "used_in_process": "生产过程A",
+                    "phase": "液体"
+                }
+            ],
+            "energy": {
+                "water_consumption": 10000,
+                "electricity_consumption": 50000,
+                "natural_gas": 10000,
+                "other_energy": "其他能源"
+            },
+            "process_description": "测试生产工艺流程描述",
+            "storage_units": [
+                {
+                    "unit_name": "储罐A",
+                    "facility_type": "储罐",
+                    "stored_materials": ["原料A"],
+                    "capacity": 50,
+                    "max_actual_storage": 40,
+                    "location_desc": "厂区东侧",
+                    "anti_leak_measures": "防渗漏措施"
+                }
+            ],
+            "hazardous_chemicals": [
+                {
+                    "chemical_name": "化学品A",
+                    "cas_no": "123-45-6",
+                    "hazard_category": "易燃液体",
+                    "max_storage": 50,
+                    "phase": "液体",
+                    "is_major_source": False
+                }
+            ],
+            "hazardous_waste": [
+                {
+                    "waste_name": "废液A",
+                    "hw_category": "废有机溶剂",
+                    "waste_code": "HW06",
+                    "source_process": "生产过程A",
+                    "hazard_characteristics": ["易燃", "有毒"],
+                    "max_storage": 5,
+                    "storage_location": "危废暂存间",
+                    "disposal_company": "测试处置公司"
+                }
+            ]
+        },
+        "environment_info": {
+            "nearby_receivers": [
+                {
+                    "receiver_type": "水环境",
+                    "name": "测试河流",
+                    "direction": "东",
+                    "distance_m": 500,
+                    "population_or_scale": "小型河流"
+                },
+                {
+                    "receiver_type": "大气环境",
+                    "name": "测试居民区",
+                    "direction": "西",
+                    "distance_m": 1000,
+                    "population_or_scale": "1000人"
+                }
+            ],
+            "wastewater": {
+                "production_wastewater": True,
+                "domestic_wastewater": True,
+                "treatment_facilities": [
+                    {
+                        "facility_name": "污水处理站",
+                        "process_type": "生化处理",
+                        "design_capacity": 100,
+                        "actual_capacity": 80,
+                        "discharge_destination": "市政管网"
+                    }
+                ]
+            },
+            "waste_gas": {
+                "organized_sources": [
+                    {
+                        "source_name": "排气筒A",
+                        "main_pollutants": ["VOCs", "NOx"],
+                        "treatment_method": "活性炭吸附",
+                        "stack_height": 15
+                    }
+                ],
+                "fugitive_sources_desc": "无组织排放源描述"
+            },
+            "noise": [
+                {
+                    "noise_source": "泵房",
+                    "location": "厂区北侧",
+                    "control_measures": "隔声罩"
+                }
+            ],
+            "solid_waste": [
+                {
+                    "waste_name": "包装材料",
+                    "waste_type": "一般固废",
+                    "annual_production": 10,
+                    "storage_method": "分类存放",
+                    "disposal_method": "回收利用"
+                }
+            ]
+        },
+        "compliance_info": {
+            "eia": {
+                "project_name": "测试项目",
+                "approval_document_no": "环审[2020]123号",
+                "approval_date": "2020-01-01",
+                "consistency_status": "一致"
+            },
+            "acceptance": {
+                "type": "竣工环境保护验收",
+                "document_no": "验[2020]456号",
+                "date": "2020-12-01"
+            },
+            "pollutant_permit": {
+                "permit_no": "排污许可证123456",
+                "authority": "北京市生态环境局",
+                "valid_from": "2021-01-01",
+                "valid_to": "2026-01-01",
+                "permitted_pollutants": ["COD", "氨氮", "VOCs", "NOx"]
+            },
+            "hazardous_waste_contracts": [
+                {
+                    "company_name": "测试处置公司",
+                    "permit_no": "危废经营许可证123456",
+                    "contract_from": "2021-01-01",
+                    "contract_to": "2026-01-01"
+                }
+            ]
+        },
+        "emergency_resources": {
+            "contact_list_internal": [
+                {
+                    "role": "总指挥",
+                    "name": "张三",
+                    "department": "总经理办公室",
+                    "mobile": "13800138000"
+                },
+                {
+                    "role": "副总指挥",
+                    "name": "李四",
+                    "department": "环保部",
+                    "mobile": "13900139000"
+                }
+            ],
+            "contact_list_external": [
+                {
+                    "unit_type": "消防部门",
+                    "unit_name": "测试消防队",
+                    "phone": "119"
+                },
+                {
+                    "unit_type": "环保部门",
+                    "unit_name": "测试环保局",
+                    "phone": "12369"
+                }
+            ],
+            "emergency_materials": [
+                {
+                    "material_name": "灭火器",
+                    "unit": "个",
+                    "quantity": 20,
+                    "purpose": "灭火",
+                    "storage_location": "各车间",
+                    "keeper": "安全管理员",
+                    "keeper_phone": "13600136000"
+                },
+                {
+                    "material_name": "应急灯",
+                    "unit": "个",
+                    "quantity": 10,
+                    "purpose": "应急照明",
+                    "storage_location": "仓库",
+                    "keeper": "仓库管理员",
+                    "keeper_phone": "13500135000"
+                }
+            ],
+            "emergency_team": {
+                "has_internal_team": True,
+                "team_size": 15,
+                "team_structure": "总指挥、副总指挥、应急办公室、现场处置组、后勤保障组"
+            },
+            "emergency_drills": [
+                {
+                    "drill_date": "2023-06-15",
+                    "drill_type": "综合应急演练",
+                    "scenario": "化学品泄漏",
+                    "participants": "全体员工"
+                }
+            ]
+        }
+    })
+    
+    # 测试文档生成
+    print("开始测试文档生成功能...")
+    
+    try:
+        result = document_generator.generate_all_documents(test_data)
+        
+        if result["success"]:
+            print("✅ 文档生成成功!")
+            
+            # 保存生成的文档到文件
+            output_dir = Path("test_output")
+            output_dir.mkdir(exist_ok=True)
+            
+            with open(output_dir / "risk_report.html", "w", encoding="utf-8") as f:
+                f.write(result["risk_report"])
+            
+            with open(output_dir / "emergency_plan.html", "w", encoding="utf-8") as f:
+                f.write(result["emergency_plan"])
+            
+            with open(output_dir / "resource_report.html", "w", encoding="utf-8") as f:
+                f.write(result["resource_report"])
+            
+            print(f"✅ 文档已保存到 {output_dir} 目录")
+            
+            # 检查文档内容长度
+            print(f"风险评估报告长度: {len(result['risk_report'])} 字符")
+            print(f"应急预案长度: {len(result['emergency_plan'])} 字符")
+            print(f"应急资源调查报告长度: {len(result['resource_report'])} 字符")
+            
+            return True
+        else:
+            print("❌ 文档生成失败:")
+            for error in result["errors"]:
+                print(f"  - {error}")
+            return False
+            
+    except Exception as e:
+        print(f"❌ 测试过程中发生错误: {str(e)}")
+        return False
+
+if __name__ == "__main__":
+    success = test_document_generation()
+    sys.exit(0 if success else 1)

@@ -12,6 +12,10 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape, Template, T
 from jinja2.sandbox import SandboxedEnvironment
 import os
 
+# 导入AI Section相关模块
+from ..prompts.ai_sections_loader import ai_sections_loader
+from ..prompts.ai_section_processor import render_user_template, call_llm, postprocess_ai_output
+
 # 配置日志
 logger = logging.getLogger(__name__)
 
@@ -848,72 +852,72 @@ class DocumentGenerator:
         # 返回对应的提示词，如果没有找到则返回通用提示词
         return prompts.get(section_name, f"请为'{enterprise_name}'生成'{section_name}'章节的内容，要求专业、准确、简洁。")
     
-    def build_ai_sections(self, enterprise_data: dict, user_id: Optional[str] = None) -> dict:
+    def build_ai_sections(self, enterprise_data: dict, user_id: Optional[str] = None, document_type: Optional[str] = None) -> dict:
         """
-        构建所有AI段落
+        构建AI段落（使用配置文件）
         
         Args:
             enterprise_data: 整个企业数据
             user_id: 用户ID（用于使用量统计）
+            document_type: 文档类型，可选，用于过滤特定文档的sections
             
         Returns:
             包含所有AI段落的字典
         """
-        # 所有需要AI生成的段落名称
-        section_names = [
-            # 环境风险评估报告
-            "enterprise_overview",
-            "location_description",
-            "terrain_description",
-            "weather_description",
-            "hydrology_description",
-            "production_process_description",
-            "safety_management_description",
-            "water_environment_impact",
-            "air_environment_impact",
-            "noise_environment_impact",
-            "solid_waste_impact",
-            "risk_management_conclusion",
-            "long_term_plan",
-            "medium_term_plan",
-            "short_term_plan",
+        try:
+            # 加载AI Section配置
+            sections_config = ai_sections_loader.load_config()
             
-            # 突发环境事件应急预案
-            "environmental_work",
-            "construction_layout",
-            "risk_prevention_measures",
-            "emergency_response_measures",
-            "incident_response_card",
+            # 根据文档类型过滤sections
+            if document_type:
+                sections_to_process = ai_sections_loader.get_sections_by_document(document_type)
+            else:
+                sections_to_process = ai_sections_loader.get_enabled_sections()
             
-            # 应急资源调查报告
-            "investigation_process",
-            "gap_analysis_1",
-            "gap_analysis_2",
-            "gap_analysis_3",
-            "gap_analysis_4",
-            "conclusion"
-        ]
-        
-        ai_sections = {}
-        
-        # 生成每个段落
-        for section_name in section_names:
-            try:
-                content = self.generate_ai_section(section_name, enterprise_data, user_id)
-                ai_sections[section_name] = content
-                logger.info(f"成功生成AI段落: {section_name}")
-            except Exception as e:
-                logger.error(f"生成AI段落失败: {section_name}, 错误: {str(e)}")
-                ai_sections[section_name] = f"[AI生成失败: {section_name}] {str(e)}"
-        
-        return ai_sections
+            ai_sections = {}
+            
+            # 生成每个段落
+            for section_key, section_config in sections_to_process.items():
+                try:
+                    # 检查section是否启用
+                    if not section_config.get("enabled", True):
+                        ai_sections[section_key] = ""
+                        continue
+                    
+                    # 获取system prompt和user template
+                    system_prompt = section_config.get("system_prompt", "")
+                    user_template = section_config.get("user_template", "")
+                    
+                    # 渲染user template
+                    user_prompt = render_user_template(user_template, enterprise_data)
+                    
+                    # 调用LLM生成内容
+                    model = section_config.get("model", "xunfei_spark_v4")
+                    generated_content = call_llm(model, system_prompt, user_prompt, user_id)
+                    
+                    # 后处理AI输出
+                    processed_content = postprocess_ai_output(generated_content)
+                    
+                    ai_sections[section_key] = processed_content
+                    logger.info(f"成功生成AI段落: {section_key}")
+                    
+                except Exception as e:
+                    logger.error(f"生成AI段落失败: {section_key}, 错误: {str(e)}")
+                    ai_sections[section_key] = f"[AI生成失败: {section_key}] {str(e)}"
+            
+            return ai_sections
+            
+        except Exception as e:
+            logger.error(f"构建AI段落失败: {str(e)}")
+            return {}
     
     def generate_all_documents(self, enterprise_data: dict, user_id: Optional[str] = None) -> dict:
         """
-        生成所有三个文档
+        生成所有三个文档（使用新架构）
         
         Args:
             enterprise_data: 符合 emergency_plan.json 的企业数据
+            user_id: 用户ID（用于使用量统计）
             
         Returns:
             包含三个文档渲染结果的字典
@@ -923,7 +927,8 @@ class DocumentGenerator:
             "emergency_plan": None,
             "resource_report": None,
             "success": False,
-            "errors": []
+            "errors": [],
+            "ai_sections_used": []
         }
         
         try:
@@ -934,9 +939,10 @@ class DocumentGenerator:
                 logger.error(f"企业数据验证失败: {errors}")
                 return result
             
-            # 生成AI段落
+            # 生成所有AI段落
             logger.info("开始生成AI段落...")
             ai_sections = self.build_ai_sections(enterprise_data, user_id)
+            result["ai_sections_used"] = list(ai_sections.keys())
             
             # 准备模板数据，合并AI段落
             template_data = self._prepare_template_data(enterprise_data)
@@ -977,6 +983,128 @@ class DocumentGenerator:
             
         except Exception as e:
             error_msg = f"生成文档时发生错误: {str(e)}"
+            result["errors"].append(error_msg)
+            logger.error(error_msg)
+            return result
+    
+    def generate_single_document(self, document_type: str, enterprise_data: dict, user_id: Optional[str] = None) -> dict:
+        """
+        生成单个文档（使用新架构）
+        
+        Args:
+            document_type: 文档类型 (risk_assessment/emergency_plan/resource_report)
+            enterprise_data: 符合 emergency_plan.json 的企业数据
+            user_id: 用户ID（用于使用量统计）
+            
+        Returns:
+            包含文档渲染结果的字典
+        """
+        result = {
+            "content": None,
+            "success": False,
+            "errors": [],
+            "ai_sections_used": []
+        }
+        
+        try:
+            # 验证企业数据
+            is_valid, errors = self.validate_enterprise_data(enterprise_data)
+            if not is_valid:
+                result["errors"] = errors
+                logger.error(f"企业数据验证失败: {errors}")
+                return result
+            
+            # 生成特定文档类型的AI段落
+            logger.info(f"开始生成{document_type}的AI段落...")
+            ai_sections = self.build_ai_sections(enterprise_data, user_id, document_type)
+            result["ai_sections_used"] = list(ai_sections.keys())
+            
+            # 准备模板数据，合并AI段落
+            template_data = self._prepare_template_data(enterprise_data)
+            template_data["ai_sections"] = ai_sections
+            
+            # 根据文档类型选择模板
+            template_map = {
+                "risk_assessment": "template_risk_plan.jinja2",
+                "emergency_plan": "template_emergency_plan.jinja2",
+                "resource_report": "template_resource_investigation.jinja2"
+            }
+            
+            template_name = template_map.get(document_type)
+            if not template_name:
+                result["errors"].append(f"不支持的文档类型: {document_type}")
+                return result
+            
+            # 渲染文档
+            logger.info(f"渲染{document_type}文档...")
+            content = self.render_jinja(template_name, template_data)
+            if content is None:
+                result["errors"].append(f"{document_type}文档生成失败")
+            else:
+                result["content"] = content
+                result["success"] = True
+                logger.info(f"{document_type}文档生成成功")
+            
+            return result
+            
+        except Exception as e:
+            error_msg = f"生成{document_type}文档时发生错误: {str(e)}"
+            result["errors"].append(error_msg)
+            logger.error(error_msg)
+            return result
+    
+    def generate_single_section(self, section_key: str, enterprise_data: dict, user_id: Optional[str] = None) -> dict:
+        """
+        生成单个AI段落
+        
+        Args:
+            section_key: AI段落键名
+            enterprise_data: 符合 emergency_plan.json 的企业数据
+            user_id: 用户ID（用于使用量统计）
+            
+        Returns:
+            包含AI段落生成结果的字典
+        """
+        result = {
+            "content": None,
+            "success": False,
+            "errors": []
+        }
+        
+        try:
+            # 检查section是否存在
+            section_config = ai_sections_loader.get_section_config(section_key)
+            if section_config is None:
+                result["errors"].append(f"AI段落不存在: {section_key}")
+                return result
+            
+            # 检查section是否启用
+            if not section_config.get("enabled", True):
+                result["errors"].append(f"AI段落已禁用: {section_key}")
+                return result
+            
+            # 获取system prompt和user template
+            system_prompt = section_config.get("system_prompt", "")
+            user_template = section_config.get("user_template", "")
+            
+            # 渲染user template
+            user_prompt = render_user_template(user_template, enterprise_data)
+            
+            # 调用LLM生成内容
+            model = section_config.get("model", "xunfei_spark_v4")
+            generated_content = call_llm(model, system_prompt, user_prompt, user_id)
+            
+            # 后处理AI输出
+            processed_content = postprocess_ai_output(generated_content)
+            
+            result["content"] = processed_content
+            result["success"] = True
+            logger.info(f"成功生成AI段落: {section_key}")
+            
+            return result
+            
+        except Exception as e:
+            error_msg = f"生成AI段落时发生错误: {str(e)}"
             result["errors"].append(error_msg)
             logger.error(error_msg)
             return result

@@ -1,0 +1,397 @@
+{
+  "sections": {
+    "enterprise_overview": {
+      "enabled": true,
+      "document": "risk_assessment",
+      "description": "企业概况，总体性技术描述",
+      "version": 1,
+      "model": "xunfei_spark_v4",
+      "fields": [
+        "basic_info.company_name",
+        "basic_info.operation.established_date",
+        "basic_info.operation.investment_environmental",
+        "basic_info.operation.company_intro",
+        "production_process.products",
+        "basic_info.operation.work_shift",
+        "basic_info.operation.work_hours_per_shift"
+      ],
+      "system_prompt": "你是一位专业的环保文档撰写专家，擅长撰写企业概况描述。请根据提供的企业信息，生成专业、准确、简洁的企业概况描述。",
+      "user_template": "请为\"{basic_info.company_name}\"生成企业概况描述，内容应包括：\n- 企业成立时间：{basic_info.operation.established_date}\n- 环保投资情况：{basic_info.operation.investment_environmental}万元\n- 主要建设内容：{basic_info.operation.company_intro}\n- 主要产品：{production_process.products}\n- 工作制度：{basic_info.operation.work_shift}班制，每班{basic_info.operation.work_hours_per_shift}小时\n\n要求：\n1. 内容专业、准确\n2. 语言简洁明了\n3. 符合环保文档风格\n4. 字数控制在200-300字"
+    },
+
+    "location_description": {
+      "enabled": true,
+      "document": "risk_assessment",
+      "description": "地理位置及交通条件描述",
+      "version": 1,
+      "model": "xunfei_spark_v4",
+      "fields": [
+        "basic_info.company_name",
+        "basic_info.address.province",
+        "basic_info.address.city",
+        "basic_info.address.district",
+        "basic_info.address.detail",
+        "basic_info.address.longitude",
+        "basic_info.address.latitude"
+      ],
+      "system_prompt": "你是一位专业的环保文档撰写专家，擅长撰写企业地理位置描述。请根据提供的企业信息，生成专业、准确、简洁的地理位置及交通条件描述。",
+      "user_template": "请为\"{basic_info.company_name}\"生成地理位置及交通描述，内容应包括：\n- 企业地理位置：{basic_info.address.province}{basic_info.address.city}{basic_info.address.district}{basic_info.address.detail}\n- 经纬度坐标：经度{basic_info.address.longitude}，纬度{basic_info.address.latitude}\n\n要求：\n1. 内容专业、准确\n2. 语言简洁明了\n3. 符合环保文档风格\n4. 字数控制在150-200字"
+    },
+
+    "terrain_description": {
+      "enabled": true,
+      "document": "risk_assessment",
+      "description": "地形地貌描述",
+      "version": 1,
+      "model": "xunfei_spark_v4",
+      "fields": [
+        "basic_info.company_name"
+      ],
+      "system_prompt": "你是一位专业的环保文档撰写专家，擅长撰写企业地形地貌描述。请根据提供的企业信息，生成专业、准确、简洁的地形地貌描述。",
+      "user_template": "请为\"{basic_info.company_name}\"生成地形地貌描述，内容应包括：\n- 企业所在区域的地形特征\n- 地貌特点\n- 对环境的影响\n\n要求：\n1. 内容专业、准确\n2. 语言简洁明了\n3. 符合环保文档风格\n4. 字数控制在150-200字"
+    },
+
+    "weather_description": {
+      "enabled": true,
+      "document": "risk_assessment",
+      "description": "气象条件描述",
+      "version": 1,
+      "model": "xunfei_spark_v4",
+      "fields": [
+        "basic_info.company_name"
+      ],
+      "system_prompt": "你是一位专业的环保文档撰写专家，擅长撰写企业气象条件描述。请根据提供的企业信息，生成专业、准确、简洁的气象条件描述。",
+      "user_template": "请为\"{basic_info.company_name}\"生成气象条件描述，内容应包括：\n- 企业所在区域的气候特征\n- 主要气象参数\n- 对环境的影响\n\n要求：\n1. 内容专业、准确\n2. 语言简洁明了\n3. 符合环保文档风格\n4. 字数控制在150-200字"
+    },
+
+    "hydrology_description": {
+      "enabled": true,
+      "document": "risk_assessment",
+      "description": "水文情况描述",
+      "version": 1,
+      "model": "xunfei_spark_v4",
+      "fields": [
+        "basic_info.company_name",
+        "environment_info.nearby_receivers"
+      ],
+      "system_prompt": "你是一位专业的环保文档撰写专家，擅长撰写企业水文情况描述。请根据提供的企业信息，生成专业、准确、简洁的水文情况描述。",
+      "user_template": "请为\"{basic_info.company_name}\"生成水文描述，内容应包括：\n- 企业所在区域的水文情况\n- 周边地表水情况：{environment_info.nearby_receivers}\n- 对环境的影响\n\n要求：\n1. 内容专业、准确\n2. 语言简洁明了\n3. 符合环保文档风格\n4. 字数控制在150-200字"
+    },
+
+    "production_process_description": {
+      "enabled": true,
+      "document": "risk_assessment",
+      "description": "生产工艺流程描述",
+      "version": 1,
+      "model": "xunfei_spark_v4",
+      "fields": [
+        "basic_info.company_name",
+        "production_process.process_description",
+        "production_process.products",
+        "production_process.raw_materials"
+      ],
+      "system_prompt": "你是一位专业的环保文档撰写专家，擅长撰写企业生产工艺流程描述。请根据提供的企业信息，生成专业、准确、简洁的生产工艺流程描述。",
+      "user_template": "请为\"{basic_info.company_name}\"生成生产工艺描述，内容应包括：\n- 主要生产工艺流程：{production_process.process_description}\n- 主要产品：{production_process.products}\n- 主要原材料：{production_process.raw_materials}\n\n要求：\n1. 内容专业、准确\n2. 语言简洁明了\n3. 符合环保文档风格\n4. 字数控制在300-400字"
+    },
+
+    "safety_management_description": {
+      "enabled": true,
+      "document": "risk_assessment",
+      "description": "安全生产管理情况描述",
+      "version": 1,
+      "model": "xunfei_spark_v4",
+      "fields": [
+        "basic_info.company_name",
+        "emergency_resources.emergency_materials"
+      ],
+      "system_prompt": "你是一位专业的环保文档撰写专家，擅长撰写企业安全生产管理情况描述。请根据提供的企业信息，生成专业、准确、简洁的安全生产管理情况描述。",
+      "user_template": "请为\"{basic_info.company_name}\"生成安全生产管理描述，内容应包括：\n- 安全生产管理体系\n- 应急救援物资配备情况：{emergency_resources.emergency_materials}\n- 相关措施和制度\n\n要求：\n1. 内容专业、准确\n2. 语言简洁明了\n3. 符合环保文档风格\n4. 字数控制在200-300字"
+    },
+
+    "water_environment_impact": {
+      "enabled": true,
+      "document": "risk_assessment",
+      "description": "水环境影响分析",
+      "version": 1,
+      "model": "xunfei_spark_v4",
+      "fields": [
+        "basic_info.company_name",
+        "environment_info.wastewater",
+        "environment_info.nearby_receivers"
+      ],
+      "system_prompt": "你是一位专业的环保文档撰写专家，擅长撰写企业水环境影响分析。请根据提供的企业信息，生成专业、准确、简洁的水环境影响分析。",
+      "user_template": "请为\"{basic_info.company_name}\"生成水环境影响分析，内容应包括：\n- 废水产生情况：{environment_info.wastewater}\n- 处理方式和效果\n- 对水环境的影响：{environment_info.nearby_receivers}\n\n要求：\n1. 内容专业、准确\n2. 语言简洁明了\n3. 符合环保文档风格\n4. 字数控制在200-300字"
+    },
+
+    "air_environment_impact": {
+      "enabled": true,
+      "document": "risk_assessment",
+      "description": "大气环境影响分析",
+      "version": 1,
+      "model": "xunfei_spark_v4",
+      "fields": [
+        "basic_info.company_name",
+        "environment_info.waste_gas",
+        "environment_info.nearby_receivers"
+      ],
+      "system_prompt": "你是一位专业的环保文档撰写专家，擅长撰写企业大气环境影响分析。请根据提供的企业信息，生成专业、准确、简洁的大气环境影响分析。",
+      "user_template": "请为\"{basic_info.company_name}\"生成大气环境影响分析，内容应包括：\n- 废气产生情况：{environment_info.waste_gas}\n- 处理方式和效果\n- 对大气环境的影响：{environment_info.nearby_receivers}\n\n要求：\n1. 内容专业、准确\n2. 语言简洁明了\n3. 符合环保文档风格\n4. 字数控制在200-300字"
+    },
+
+    "noise_environment_impact": {
+      "enabled": true,
+      "document": "risk_assessment",
+      "description": "噪声环境影响分析",
+      "version": 1,
+      "model": "xunfei_spark_v4",
+      "fields": [
+        "basic_info.company_name",
+        "environment_info.noise"
+      ],
+      "system_prompt": "你是一位专业的环保文档撰写专家，擅长撰写企业噪声环境影响分析。请根据提供的企业信息，生成专业、准确、简洁的噪声环境影响分析。",
+      "user_template": "请为\"{basic_info.company_name}\"生成噪声环境影响分析，内容应包括：\n- 噪声产生源：{environment_info.noise}\n- 噪声控制措施\n- 对声环境的影响\n\n要求：\n1. 内容专业、准确\n2. 语言简洁明了\n3. 符合环保文档风格\n4. 字数控制在150-200字"
+    },
+
+    "solid_waste_impact": {
+      "enabled": true,
+      "document": "risk_assessment",
+      "description": "固体废物影响分析",
+      "version": 1,
+      "model": "xunfei_spark_v4",
+      "fields": [
+        "basic_info.company_name",
+        "environment_info.solid_waste",
+        "production_process.hazardous_waste"
+      ],
+      "system_prompt": "你是一位专业的环保文档撰写专家，擅长撰写企业固体废物影响分析。请根据提供的企业信息，生成专业、准确、简洁的固体废物影响分析。",
+      "user_template": "请为\"{basic_info.company_name}\"生成固体废物影响分析，内容应包括：\n- 固体废物产生情况：{environment_info.solid_waste}\n- 危险废物情况：{production_process.hazardous_waste}\n- 处置方式\n- 对环境的影响\n\n要求：\n1. 内容专业、准确\n2. 语言简洁明了\n3. 符合环保文档风格\n4. 字数控制在200-300字"
+    },
+
+    "risk_management_conclusion": {
+      "enabled": true,
+      "document": "risk_assessment",
+      "description": "风险管理结论",
+      "version": 1,
+      "model": "xunfei_spark_v4",
+      "fields": [
+        "basic_info.company_name",
+        "basic_info.risk_level",
+        "production_process.hazardous_chemicals",
+        "emergency_resources.emergency_materials"
+      ],
+      "system_prompt": "你是一位专业的环保文档撰写专家，擅长撰写企业风险管理结论。请根据提供的企业信息，生成专业、准确、简洁的风险管理结论。",
+      "user_template": "请为\"{basic_info.company_name}\"生成风险管理结论，内容应包括：\n- 环境风险管理制度评估\n- 应急资源评估：{emergency_resources.emergency_materials}\n- 风险防控能力评估\n- 企业风险等级：{basic_info.risk_level}\n\n要求：\n1. 内容专业、准确\n2. 语言简洁明了\n3. 符合环保文档风格\n4. 字数控制在200-300字"
+    },
+
+    "long_term_plan": {
+      "enabled": true,
+      "document": "risk_assessment",
+      "description": "环境风险防控长期计划",
+      "version": 1,
+      "model": "xunfei_spark_v4",
+      "fields": [
+        "basic_info.company_name",
+        "basic_info.risk_level"
+      ],
+      "system_prompt": "你是一位专业的环保文档撰写专家，擅长制定企业环境风险防控计划。请根据提供的企业信息，生成专业、准确、简洁的环境风险防控长期计划。",
+      "user_template": "请为\"{basic_info.company_name}\"制定环境风险防控长期计划，内容应包括：\n- 长期目标和措施\n- 实施步骤和时间安排\n- 预期效果\n- 企业风险等级：{basic_info.risk_level}\n\n要求：\n1. 内容专业、准确\n2. 语言简洁明了\n3. 符合环保文档风格\n4. 字数控制在200-300字"
+    },
+
+    "medium_term_plan": {
+      "enabled": true,
+      "document": "risk_assessment",
+      "description": "环境风险防控中期计划",
+      "version": 1,
+      "model": "xunfei_spark_v4",
+      "fields": [
+        "basic_info.company_name",
+        "emergency_resources.emergency_materials"
+      ],
+      "system_prompt": "你是一位专业的环保文档撰写专家，擅长制定企业环境风险防控计划。请根据提供的企业信息，生成专业、准确、简洁的环境风险防控中期计划。",
+      "user_template": "请为\"{basic_info.company_name}\"制定环境风险防控中期计划，内容应包括：\n- 中期目标和措施\n- 实施步骤和时间安排\n- 预期效果\n- 应急物资情况：{emergency_resources.emergency_materials}\n\n要求：\n1. 内容专业、准确\n2. 语言简洁明了\n3. 符合环保文档风格\n4. 字数控制在200-300字"
+    },
+
+    "short_term_plan": {
+      "enabled": true,
+      "document": "risk_assessment",
+      "description": "环境风险防控短期计划",
+      "version": 1,
+      "model": "xunfei_spark_v4",
+      "fields": [
+        "basic_info.company_name",
+        "environment_info.wastewater",
+        "emergency_resources.emergency_materials"
+      ],
+      "system_prompt": "你是一位专业的环保文档撰写专家，擅长制定企业环境风险防控计划。请根据提供的企业信息，生成专业、准确、简洁的环境风险防控短期计划。",
+      "user_template": "请为\"{basic_info.company_name}\"制定环境风险防控短期计划，内容应包括：\n- 短期目标和措施\n- 实施步骤和时间安排\n- 预期效果\n- 废水管理情况：{environment_info.wastewater}\n- 应急物资情况：{emergency_resources.emergency_materials}\n\n要求：\n1. 内容专业、准确\n2. 语言简洁明了\n3. 符合环保文档风格\n4. 字数控制在200-300字"
+    },
+
+    "environmental_work": {
+      "enabled": true,
+      "document": "emergency_plan",
+      "description": "企业环保工作情况",
+      "version": 1,
+      "model": "xunfei_spark_v4",
+      "fields": [
+        "basic_info.company_name",
+        "compliance_info.eia",
+        "compliance_info.acceptance",
+        "compliance_info.pollutant_permit",
+        "compliance_info.hazardous_waste_contracts"
+      ],
+      "system_prompt": "你是一位专业的环保文档撰写专家，擅长撰写企业环保工作情况描述。请根据提供的企业信息，生成专业、准确、简洁的环保工作情况描述。",
+      "user_template": "请为\"{basic_info.company_name}\"生成企业环保工作情况描述，内容应包括：\n- 环评情况：{compliance_info.eia}\n- 验收情况：{compliance_info.acceptance}\n- 排污许可证：{compliance_info.pollutant_permit}\n- 危险废物处置合同：{compliance_info.hazardous_waste_contracts}\n\n要求：\n1. 内容专业、准确\n2. 语言简洁明了\n3. 符合环保文档风格\n4. 字数控制在200-300字"
+    },
+
+    "construction_layout": {
+      "enabled": true,
+      "document": "emergency_plan",
+      "description": "企业建设布置情况",
+      "version": 1,
+      "model": "xunfei_spark_v4",
+      "fields": [
+        "basic_info.company_name",
+        "basic_info.operation.land_area",
+        "basic_info.operation.building_area"
+      ],
+      "system_prompt": "你是一位专业的环保文档撰写专家，擅长撰写企业建设布置情况描述。请根据提供的企业信息，生成专业、准确、简洁的建设布置情况描述。",
+      "user_template": "请为\"{basic_info.company_name}\"生成企业建设布置情况描述，内容应包括：\n- 企业平面布置情况\n- 建设情况\n- 占地面积：{basic_info.operation.land_area}平方米\n- 建筑面积：{basic_info.operation.building_area}平方米\n\n要求：\n1. 内容专业、准确\n2. 语言简洁明了\n3. 符合环保文档风格\n4. 字数控制在150-200字"
+    },
+
+    "risk_prevention_measures": {
+      "enabled": true,
+      "document": "emergency_plan",
+      "description": "环境风险源防范措施",
+      "version": 1,
+      "model": "xunfei_spark_v4",
+      "fields": [
+        "basic_info.company_name",
+        "production_process.hazardous_chemicals",
+        "production_process.storage_units"
+      ],
+      "system_prompt": "你是一位专业的环保文档撰写专家，擅长撰写企业环境风险源防范措施。请根据提供的企业信息，生成专业、准确、简洁的环境风险源防范措施。",
+      "user_template": "请为\"{basic_info.company_name}\"生成环境风险源防范措施，内容应包括：\n- 危险化学品情况：{production_process.hazardous_chemicals}\n- 储存设施情况：{production_process.storage_units}\n- 针对各风险源的防范措施\n\n要求：\n1. 内容专业、准确\n2. 语言简洁明了\n3. 符合环保文档风格\n4. 字数控制在300-400字"
+    },
+
+    "emergency_response_measures": {
+      "enabled": true,
+      "document": "emergency_plan",
+      "description": "突发环境事件现场应急措施",
+      "version": 1,
+      "model": "xunfei_spark_v4",
+      "fields": [
+        "basic_info.company_name",
+        "production_process.hazardous_chemicals",
+        "emergency_resources.emergency_materials",
+        "emergency_resources.contact_list_internal"
+      ],
+      "system_prompt": "你是一位专业的环保文档撰写专家，擅长撰写企业突发环境事件现场应急措施。请根据提供的企业信息，生成专业、准确、简洁的突发环境事件现场应急措施。",
+      "user_template": "请为\"{basic_info.company_name}\"生成突发环境事件现场应急措施，内容应包括：\n- 危险化学品情况：{production_process.hazardous_chemicals}\n- 应急物资情况：{emergency_resources.emergency_materials}\n- 应急队伍情况：{emergency_resources.contact_list_internal}\n- 针对各事故类型的应急处置措施\n\n要求：\n1. 内容专业、准确\n2. 语言简洁明了\n3. 符合环保文档风格\n4. 字数控制在300-400字"
+    },
+
+    "incident_response_card": {
+      "enabled": true,
+      "document": "emergency_plan",
+      "description": "事故类型应急处置卡",
+      "version": 1,
+      "model": "xunfei_spark_v4",
+      "fields": [
+        "basic_info.company_name",
+        "production_process.hazardous_chemicals",
+        "emergency_resources.emergency_materials",
+        "emergency_resources.contact_list_internal",
+        "emergency_resources.contact_list_external"
+      ],
+      "system_prompt": "你是一位专业的环保文档撰写专家，擅长撰写企业事故类型应急处置卡。请根据提供的企业信息，生成专业、准确、简洁的事故类型应急处置卡。",
+      "user_template": "请为\"{basic_info.company_name}\"生成事故类型应急处置卡，内容应包括：\n- 事故类型及描述\n- 危害及后果分析\n- 应急物资：{emergency_resources.emergency_materials}\n- 处置措施\n- 应急处置注意事项\n- 内部应急联系电话：{emergency_resources.contact_list_internal}\n- 外部救援电话：{emergency_resources.contact_list_external}\n\n要求：\n1. 内容专业、准确\n2. 语言简洁明了\n3. 符合环保文档风格\n4. 字数控制在300-400字"
+    },
+
+    "investigation_process": {
+      "enabled": true,
+      "document": "resource_report",
+      "description": "应急资源调查过程",
+      "version": 1,
+      "model": "xunfei_spark_v4",
+      "fields": [
+        "basic_info.company_name"
+      ],
+      "system_prompt": "你是一位专业的环保文档撰写专家，擅长撰写企业应急资源调查过程描述。请根据提供的企业信息，生成专业、准确、简洁的应急资源调查过程描述。",
+      "user_template": "请为\"{basic_info.company_name}\"生成应急资源调查过程描述，内容应包括：\n- 调查开始时间\n- 调查结束时间\n- 调查基准时间\n- 调查负责人\n- 调查联系人\n- 调查方法和过程\n\n要求：\n1. 内容专业、准确\n2. 语言简洁明了\n3. 符合环保文档风格\n4. 字数控制在200-300字"
+    },
+
+    "gap_analysis_1": {
+      "enabled": true,
+      "document": "resource_report",
+      "description": "应急资源差距分析1（救援队伍力量）",
+      "version": 1,
+      "model": "xunfei_spark_v4",
+      "fields": [
+        "basic_info.company_name",
+        "emergency_resources.emergency_team",
+        "basic_info.operation.employees_total"
+      ],
+      "system_prompt": "你是一位专业的环保文档撰写专家，擅长撰写企业应急资源差距分析。请根据提供的企业信息，生成专业、准确、简洁的应急资源差距分析（救援队伍力量）。",
+      "user_template": "请为\"{basic_info.company_name}\"生成应急资源差距分析（救援队伍力量），内容应包括：\n- 应急队伍情况：{emergency_resources.emergency_team}\n- 企业员工总数：{basic_info.operation.employees_total}人\n- 救援队伍力量差距分析\n- 改进建议\n\n要求：\n1. 内容专业、准确\n2. 语言简洁明了\n3. 符合环保文档风格\n4. 字数控制在200-300字"
+    },
+
+    "gap_analysis_2": {
+      "enabled": true,
+      "document": "resource_report",
+      "description": "应急资源差距分析2（救援装备）",
+      "version": 1,
+      "model": "xunfei_spark_v4",
+      "fields": [
+        "basic_info.company_name",
+        "emergency_resources.emergency_materials",
+        "production_process.hazardous_chemicals"
+      ],
+      "system_prompt": "你是一位专业的环保文档撰写专家，擅长撰写企业应急资源差距分析。请根据提供的企业信息，生成专业、准确、简洁的应急资源差距分析（救援装备）。",
+      "user_template": "请为\"{basic_info.company_name}\"生成应急资源差距分析（救援装备），内容应包括：\n- 应急物资情况：{emergency_resources.emergency_materials}\n- 危险化学品情况：{production_process.hazardous_chemicals}\n- 救援装备差距分析\n- 改进建议\n\n要求：\n1. 内容专业、准确\n2. 语言简洁明了\n3. 符合环保文档风格\n4. 字数控制在200-300字"
+    },
+
+    "gap_analysis_3": {
+      "enabled": true,
+      "document": "resource_report",
+      "description": "应急资源差距分析3（救援知识）",
+      "version": 1,
+      "model": "xunfei_spark_v4",
+      "fields": [
+        "basic_info.company_name",
+        "emergency_resources.emergency_team",
+        "emergency_resources.emergency_drills"
+      ],
+      "system_prompt": "你是一位专业的环保文档撰写专家，擅长撰写企业应急资源差距分析。请根据提供的企业信息，生成专业、准确、简洁的应急资源差距分析（救援知识）。",
+      "user_template": "请为\"{basic_info.company_name}\"生成应急资源差距分析（救援知识），内容应包括：\n- 应急队伍情况：{emergency_resources.emergency_team}\n- 应急演练情况：{emergency_resources.emergency_drills}\n- 救援知识差距分析\n- 改进建议\n\n要求：\n1. 内容专业、准确\n2. 语言简洁明了\n3. 符合环保文档风格\n4. 字数控制在200-300字"
+    },
+
+    "gap_analysis_4": {
+      "enabled": true,
+      "document": "resource_report",
+      "description": "应急资源差距分析4（应急演练）",
+      "version": 1,
+      "model": "xunfei_spark_v4",
+      "fields": [
+        "basic_info.company_name",
+        "emergency_resources.emergency_drills"
+      ],
+      "system_prompt": "你是一位专业的环保文档撰写专家，擅长撰写企业应急资源差距分析。请根据提供的企业信息，生成专业、准确、简洁的应急资源差距分析（应急演练）。",
+      "user_template": "请为\"{basic_info.company_name}\"生成应急资源差距分析（应急演练），内容应包括：\n- 应急演练情况：{emergency_resources.emergency_drills}\n- 演练频次和质量分析\n- 应急演练差距分析\n- 改进建议\n\n要求：\n1. 内容专业、准确\n2. 语言简洁明了\n3. 符合环保文档风格\n4. 字数控制在200-300字"
+    },
+
+    "conclusion": {
+      "enabled": true,
+      "document": "resource_report",
+      "description": "应急资源调查结论",
+      "version": 1,
+      "model": "xunfei_spark_v4",
+      "fields": [
+        "basic_info.company_name",
+        "production_process.hazardous_chemicals",
+        "emergency_resources.emergency_materials",
+        "emergency_resources.emergency_team"
+      ],
+      "system_prompt": "你是一位专业的环保文档撰写专家，擅长撰写企业应急资源调查结论。请根据提供的企业信息，生成专业、准确、简洁的应急资源调查结论。",
+      "user_template": "请为\"{basic_info.company_name}\"生成应急资源调查结论，内容应包括：\n- 危险化学品情况：{production_process.hazardous_chemicals}\n- 应急物资情况：{emergency_resources.emergency_materials}\n- 应急队伍情况：{emergency_resources.emergency_team}\n- 资源匹配情况评估\n- 总体结论和建议\n\n要求：\n1. 内容专业、准确\n2. 语言简洁明了\n3. 符合环保文档风格\n4. 字数控制在200-300字"
+    }
+  }
+}

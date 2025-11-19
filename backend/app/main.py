@@ -46,7 +46,7 @@ async def health_check():
     return {"status": "healthy"}
 
 # 引入路由模块
-from app.routes import auth, projects, documents, comments, ai_generate, performance, error_monitoring, admin, enterprise, debug, templates
+from app.routes import auth, projects, documents, comments, ai_generate, performance, error_monitoring, admin, enterprise, debug, templates, document_generation, docs
 
 app.include_router(auth.router, prefix="/api")
 app.include_router(projects.router, prefix="/api")
@@ -59,6 +59,8 @@ app.include_router(admin.router, prefix="/api")
 app.include_router(enterprise.router, prefix="/api")
 app.include_router(debug.router, prefix="/api")
 app.include_router(templates.router, prefix="/api")
+app.include_router(document_generation.router, prefix="/api")
+app.include_router(docs.router)
 
 # 导出路由（需要安装 reportlab, python-docx, beautifulsoup4）
 try:

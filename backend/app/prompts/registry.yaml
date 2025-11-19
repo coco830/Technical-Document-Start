@@ -11,7 +11,7 @@ templates:
 
     # 模板文件路径
     schema_path: "templates/emergency_plan.json"
-    prompt_template_path: "templates/emergency_plan.jinja2"
+    prompt_template_path: "templates/template_emergency_plan.jinja2"
 
     # 是否启用
     enabled: true
@@ -26,6 +26,64 @@ templates:
     cache:
       enabled: true
       ttl: 3600  # 缓存时间（秒）
+
+    # 所需的必填字段
+    required_fields:
+      - enterprise_info
+
+  # 环境风险评估报告模板
+  - id: risk_assessment
+    name: "环境风险评估报告"
+    description: "用于生成环境风险评估报告，分析企业环境风险"
+    category: "environmental"
+    version: "1.0.0"
+
+    # 模板文件路径
+    schema_path: "templates/emergency_plan.json"
+    prompt_template_path: "templates/template_risk_plan.jinja2"
+
+    # 是否启用
+    enabled: true
+
+    # AI 模型配置
+    ai_config:
+      model: "gpt-4"
+      temperature: 0.7
+      max_tokens: 2000
+
+    # 缓存配置
+    cache:
+      enabled: true
+      ttl: 3600
+
+    # 所需的必填字段
+    required_fields:
+      - enterprise_info
+
+  # 应急资源调查报告模板
+  - id: resource_investigation
+    name: "应急资源调查报告"
+    description: "用于生成应急资源调查报告，统计企业应急资源"
+    category: "environmental"
+    version: "1.0.0"
+
+    # 模板文件路径
+    schema_path: "templates/emergency_plan.json"
+    prompt_template_path: "templates/template_resource_investigation.jinja2"
+
+    # 是否启用
+    enabled: true
+
+    # AI 模型配置
+    ai_config:
+      model: "gpt-4"
+      temperature: 0.7
+      max_tokens: 2000
+
+    # 缓存配置
+    cache:
+      enabled: true
+      ttl: 3600
 
     # 所需的必填字段
     required_fields:
@@ -74,6 +132,43 @@ global:
       - appendices
       - section_title
       - section_id
+      # 基本信息字段
+      - enterprise_name
+      - unified_social_credit_code
+      - legal_representative
+      - contact_person
+      - contact_phone
+      - address
+      - registered_capital
+      - establishment_date
+      - industry_type
+      - business_scope
+      - employee_count
+      # 生产信息字段
+      - main_products
+      - production_capacity
+      - production_process
+      - working_system
+      # 环境信息字段
+      - location_type
+      - geographic_coordinates
+      - nearby_sensitive_points
+      - weather_conditions
+      - hydrological_conditions
+      # 合规信息字段
+      - environmental_permits
+      - environmental_inspections
+      - environmental_incidents
+      # 应急资源字段
+      - emergency_equipment
+      - emergency_materials
+      - emergency_team
+      - emergency_plan
+      # 风险评估字段
+      - risk_identification
+      - risk_analysis
+      - risk_level
+      - risk_control_measures
     # 最大模板大小（字节）
     max_template_size: 102400  # 100KB
 
