@@ -8,6 +8,7 @@ import Templates from './pages/Templates'
 import ProjectDetail from './pages/ProjectDetail'
 import ProjectEnterprise from './pages/ProjectEnterprise'
 import TemplateEngineTest from './pages/TemplateEngineTest'
+import AuthTest from './pages/AuthTest'
 import Editor from './pages/Editor'
 import AIGenerate from './pages/AIGenerate'
 import Export from './pages/Export'
@@ -126,6 +127,15 @@ function App() {
             <RouteGuard requireAuth={true}>
               <ProtectedRoute>
                 <TemplateEngineTest />
+              </ProtectedRoute>
+            </RouteGuard>
+          } />
+
+          {/* 认证测试路由 */}
+          <Route path="/auth-test" element={
+            <RouteGuard requireAuth={true}>
+              <ProtectedRoute>
+                <AuthTest />
               </ProtectedRoute>
             </RouteGuard>
           } />

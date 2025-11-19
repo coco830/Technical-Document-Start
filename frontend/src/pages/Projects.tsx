@@ -63,12 +63,16 @@ export default function Projects() {
 
       const res = await apiClient.get<ProjectListResponse>(`/projects/?${params.toString()}`)
 
-      setProjects(res.data.projects)
-      setTotal(res.data.total)
-      setTotalPages(res.data.total_pages)
+      setProjects(res.data?.projects || [])
+      setTotal(res.data?.total || 0)
+      setTotalPages(res.data?.total_pages || 1)
     } catch (error: any) {
       console.error('获取项目列表失败:', error)
       setError(error.message || '获取项目列表失败')
+      // 在错误情况下设置空数据，避免null引用错误
+      setProjects([])
+      setTotal(0)
+      setTotalPages(1)
     } finally {
       setLoading(false)
     }

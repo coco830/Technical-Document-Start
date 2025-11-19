@@ -42,11 +42,11 @@ export default function Dashboard() {
 
       // 获取项目列表
       const projectsRes = await apiClient.get('/projects/?page_size=5&status=active')
-      const projectsData = projectsRes.data.projects || []
+      const projectsData = projectsRes.data?.projects || []
 
       // 计算统计数据
       const allProjectsRes = await apiClient.get('/projects/?page_size=100')
-      const allProjects = allProjectsRes.data.projects || []
+      const allProjects = allProjectsRes.data?.projects || []
 
       const currentMonth = new Date().getMonth()
       const currentYear = new Date().getFullYear()
@@ -72,6 +72,14 @@ export default function Dashboard() {
       setProjects(projectsWithProgress)
     } catch (error) {
       console.error('获取工作台数据失败:', error)
+      // 在错误情况下设置空数据，避免null引用错误
+      setProjects([])
+      setStats({
+        active: 0,
+        completed: 0,
+        thisMonth: 0,
+        total: 0
+      })
     } finally {
       setLoading(false)
     }
@@ -175,7 +183,7 @@ export default function Dashboard() {
                 <div className="text-3xl mb-3 group-hover:scale-110 transition-transform">📋</div>
                 <h3 className="text-lg font-semibold text-gray-800 mb-2">继续编辑</h3>
                 <p className="text-sm text-gray-600">
-                  {projects.length > 0
+                  {projects && projects.length > 0
                     ? `继续编辑未完成的项目: "${projects[0].title}"`
                     : '查看和编辑您的项目'}
                 </p>
@@ -193,7 +201,7 @@ export default function Dashboard() {
           </div>
 
           {/* 最近项目 */}
-          {projects.length > 0 && (
+          {projects && projects.length > 0 && (
             <div className="bg-white rounded-lg shadow-md p-6">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-semibold text-gray-800">📈 最近项目</h2>

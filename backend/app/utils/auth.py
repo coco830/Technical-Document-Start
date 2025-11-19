@@ -59,8 +59,12 @@ def decode_access_token(token: str) -> dict:
     """解码JWT令牌"""
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        print(f"✅ JWT解码成功，payload: {payload}")
         return payload
-    except JWTError:
+    except JWTError as e:
+        print(f"❌ JWT解码失败: {e}")
+        print(f"❌ 使用的SECRET_KEY长度: {len(SECRET_KEY)}")
+        print(f"❌ Token预览: {token[:50] if len(token) > 50 else token}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="无效的认证凭据",
@@ -80,19 +84,29 @@ def get_current_user(
         db = next(get_db())
 
     token = credentials.credentials
-    payload = decode_access_token(token)
+    print(f"🔍 验证token: {token[:20]}..." if len(token) > 20 else f"🔍 验证token: {token}")
+    
+    try:
+        payload = decode_access_token(token)
+        print(f"✅ Token解码成功: {payload}")
+    except Exception as e:
+        print(f"❌ Token解码失败: {e}")
+        raise
 
     email: str = payload.get("sub")
     if email is None:
+        print("❌ Token中无email信息")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="无效的认证凭据",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
+    print(f"🔍 查询用户: {email}")
     # 从数据库查询用户
     user = db.query(User).filter(User.email == email).first()
     if user is None:
+        print(f"❌ 用户不存在: {email}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="用户不存在",
@@ -100,11 +114,13 @@ def get_current_user(
         )
 
     if not user.is_active:
+        print(f"❌ 用户已被禁用: {email}")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="账户已被禁用"
         )
 
+    print(f"✅ 用户验证成功: {email}, ID: {user.id}")
     return user
 
 def get_current_active_user(

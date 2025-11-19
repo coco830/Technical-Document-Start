@@ -42,19 +42,36 @@ const processQueue = (error: any, token: string | null = null) => {
 // 刷新token的函数
 const refreshToken = async () => {
   try {
-    // 使用simpleApiClient避免无限循环
-    const response = await simpleApiClient.post('/auth/refresh', {}, {
+    console.log('🔄 开始刷新token...')
+    const currentToken = useUserStore.getState().token
+    console.log('📋 当前token:', currentToken ? `${currentToken.substring(0, 20)}...` : 'null')
+    
+    if (!currentToken) {
+      console.error('❌ 没有可刷新的token')
+      throw new Error('没有可刷新的token')
+    }
+    
+    // 创建一个临时的axios实例来避免无限循环，直接使用基础api实例但禁用拦截器
+    const refreshApi = axios.create({
+      baseURL: import.meta.env.VITE_API_URL || '/api',
+      timeout: 10000,
       headers: {
-        Authorization: `Bearer ${useUserStore.getState().token}`
-      }
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${currentToken}`
+      },
     })
     
+    const response = await refreshApi.post('/auth/refresh', {})
+    
+    console.log('✅ Token刷新响应:', response.data)
     const { access_token } = response.data
     useUserStore.getState().setToken(access_token)
     
+    console.log('🆕 新token已设置:', access_token ? `${access_token.substring(0, 20)}...` : 'null')
     return access_token
   } catch (error) {
-    console.error('Token刷新失败:', error)
+    console.error('❌ Token刷新失败:', error)
+    console.error('❌ 刷新失败详情:', error.response?.data || error.message)
     // 刷新失败，清除用户信息并跳转到登录页
     useUserStore.getState().logout()
     window.location.href = '/login'
@@ -66,12 +83,23 @@ const refreshToken = async () => {
 api.interceptors.request.use(
   (config) => {
     const token = useUserStore.getState().token
+    console.log(`🚀 发送${config.method?.toUpperCase()}请求到: ${config.url}`)
+    console.log('📋 当前认证状态:', {
+      hasToken: !!token,
+      tokenPreview: token ? `${token.substring(0, 20)}...` : 'null',
+      isAuthenticated: useUserStore.getState().isAuthenticated
+    })
+    
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
+      console.log('✅ 已添加Authorization头')
+    } else {
+      console.log('⚠️ 无token，未添加Authorization头')
     }
     return config
   },
   (error) => {
+    console.error('❌ 请求拦截器错误:', error)
     return Promise.reject(error)
   }
 )
@@ -79,10 +107,21 @@ api.interceptors.request.use(
 // 响应拦截器：统一错误处理和token刷新
 api.interceptors.response.use(
   (response: AxiosResponse) => {
+    console.log(`✅ 收到响应: ${response.config.method?.toUpperCase()} ${response.config.url} - ${response.status}`)
     return response
   },
   async (error: AxiosError) => {
     const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean }
+    
+    console.log(`❌ 请求失败: ${originalRequest?.method?.toUpperCase()} ${originalRequest?.url} - ${error.response?.status}`)
+    console.log('❌ 错误详情:', {
+      message: error.message,
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data,
+      isRetry: originalRequest?._retry,
+      isRefreshing
+    })
     
     // 记录错误
     const errorInfo = handleError(
@@ -96,32 +135,41 @@ api.interceptors.response.use(
 
     // 处理401未授权错误
     if (error.response?.status === 401 && !originalRequest._retry) {
+      console.log('🔄 检测到401错误，开始token刷新流程...')
+      
       if (isRefreshing) {
+        console.log('⏳ token正在刷新中，将请求加入队列...')
         // 如果正在刷新token，将请求加入待重试队列
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject })
         }).then(token => {
+          console.log('🔄 使用新token重试队列中的请求')
           if (originalRequest.headers) {
             originalRequest.headers.Authorization = `Bearer ${token}`
           }
           return api(originalRequest)
         }).catch(err => {
+          console.error('❌ 队列中请求重试失败:', err)
           return Promise.reject(err)
         })
       }
 
+      console.log('🔄 开始刷新token...')
       originalRequest._retry = true
       isRefreshing = true
 
       try {
         const newToken = await refreshToken()
+        console.log('✅ token刷新成功，处理队列...')
         processQueue(null, newToken)
         
         if (originalRequest.headers) {
           originalRequest.headers.Authorization = `Bearer ${newToken}`
         }
+        console.log('🔄 使用新token重试原请求')
         return api(originalRequest)
       } catch (refreshError) {
+        console.error('❌ token刷新失败:', refreshError)
         processQueue(refreshError, null)
         return Promise.reject(refreshError)
       } finally {

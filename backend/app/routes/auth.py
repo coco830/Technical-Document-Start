@@ -130,12 +130,16 @@ async def refresh_token(current_user: User = Depends(get_current_user)):
 
     使用当前有效的token获取新的token
     """
+    print(f"🔄 Token刷新请求 - 用户: {current_user.email}, ID: {current_user.id}")
+    
     # 生成新的 JWT Token
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         data={"sub": current_user.email, "user_id": current_user.id, "name": current_user.name},
         expires_delta=access_token_expires
     )
+    
+    print(f"✅ 新token已生成 - 用户: {current_user.email}")
 
     # 返回新的token和用户信息
     return TokenResponse(
@@ -158,6 +162,8 @@ async def verify_token(current_user: User = Depends(get_current_user)):
 
     返回当前登录用户信息
     """
+    print(f"🔍 Token验证请求 - 用户: {current_user.email}, ID: {current_user.id}")
+    
     return UserResponse(
         id=current_user.id,
         email=current_user.email,

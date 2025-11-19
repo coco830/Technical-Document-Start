@@ -115,12 +115,12 @@ export default function ProjectLayout({ children, title, projectId }: ProjectLay
       children: [
         {
           path: `/project/${currentProjectId}/enterprise`,
-          label: '基本信息',
+          label: '企业基本信息',
           icon: '📝'
         },
         {
           path: `/project/${currentProjectId}/enterprise/production`,
-          label: '生产过程',
+          label: '生产过程与风险物质',
           icon: '⚙️'
         },
         {
@@ -130,8 +130,13 @@ export default function ProjectLayout({ children, title, projectId }: ProjectLay
         },
         {
           path: `/project/${currentProjectId}/enterprise/permits`,
-          label: '环保手续',
+          label: '环保手续与管理制度',
           icon: '📋'
+        },
+        {
+          path: `/project/${currentProjectId}/enterprise/emergency`,
+          label: '应急管理与资源',
+          icon: '🚨'
         }
       ]
     },

@@ -42,8 +42,35 @@ export const useUserStore = create<UserState>()(
       },
       initializeAuth: () => {
         const token = localStorage.getItem('token')
+        console.log('🔍 初始化认证状态，token:', token ? `${token.substring(0, 20)}...` : 'null')
+        
         if (token) {
-          set({ token, isAuthenticated: true })
+          // 验证token格式（简单的JWT格式检查）
+          try {
+            const parts = token.split('.')
+            if (parts.length === 3) {
+              // 尝试解析payload部分（不验证签名，只检查格式）
+              const payload = JSON.parse(atob(parts[1]))
+              const now = Math.floor(Date.now() / 1000)
+              
+              if (payload.exp && payload.exp > now) {
+                console.log('✅ Token格式正确且未过期')
+                set({ token, isAuthenticated: true })
+              } else {
+                console.log('⚠️ Token已过期，清除认证状态')
+                localStorage.removeItem('token')
+                set({ token: null, isAuthenticated: false })
+              }
+            } else {
+              console.log('⚠️ Token格式错误，清除认证状态')
+              localStorage.removeItem('token')
+              set({ token: null, isAuthenticated: false })
+            }
+          } catch (error) {
+            console.log('⚠️ Token解析失败，清除认证状态:', error)
+            localStorage.removeItem('token')
+            set({ token: null, isAuthenticated: false })
+          }
         }
       },
     }),

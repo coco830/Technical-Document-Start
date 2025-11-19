@@ -19,14 +19,14 @@ def check_users():
             print(f"  {col[1]} {col[2]} {'NOT NULL' if col[3] else 'NULL'} {'DEFAULT ' + str(col[4]) if col[4] is not None else ''}")
 
         print("\n用户数据:")
-        cursor.execute("SELECT id, name, email, role, is_active, is_verified FROM users")
+        cursor.execute("SELECT id, name, email, is_active, is_verified FROM users")
         users = cursor.fetchall()
 
         if not users:
             print("  没有用户数据")
         else:
             for user in users:
-                print(f"  ID: {user[0]}, 姓名: {user[1]}, 邮箱: {user[2]}, 角色: {user[3]}, 激活: {user[4]}, 验证: {user[5]}")
+                print(f"  ID: {user[0]}, 姓名: {user[1]}, 邮箱: {user[2]}, 激活: {user[3]}, 验证: {user[4]}")
 
     except Exception as e:
         print(f"错误: {e}")
