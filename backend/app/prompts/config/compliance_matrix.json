@@ -1,0 +1,213 @@
+{
+  "incident_response_card": {
+    "must_cover": [
+      "scenario_liquid_leak",
+      "scenario_gas_leak",
+      "scenario_fire"
+    ],
+    "avoid": [
+      "absolute_language"
+    ]
+  },
+  "enterprise_overview": {
+    "must_cover": [
+      "basic_company_info"
+    ],
+    "avoid": [
+      "emergency_organization",
+      "response_measures"
+    ]
+  },
+  "location_description": {
+    "must_cover": [
+      "sensitive_point_location",
+      "direction_distance"
+    ],
+    "avoid": [
+      "fabricated_terrain_data"
+    ]
+  },
+  "terrain_description": {
+    "must_cover": [
+      "general_description"
+    ],
+    "avoid": [
+      "fabricated_terrain_numbers"
+    ]
+  },
+  "weather_description": {
+    "must_cover": [
+      "dominant_wind_direction"
+    ],
+    "avoid": [
+      "specific_yearly_values"
+    ]
+  },
+  "hydrology_description": {
+    "must_cover": [
+      "monitoring_plan_water_info"
+    ],
+    "avoid": [],
+    "requirements": [
+      "if_river_mentioned_upstream_downstream"
+    ]
+  },
+  "production_process_description": {
+    "must_cover": [
+      "process_consistent_with_incident_scenarios"
+    ],
+    "avoid": [
+      "fabricated_equipment_or_process"
+    ]
+  },
+  "safety_management_description": {
+    "must_cover": [
+      "management_system_existence"
+    ],
+    "avoid": [
+      "evaluate_perfection_level"
+    ]
+  },
+  "water_environment_impact": {
+    "must_cover": [
+      "water_impact_corresponds_to_sensitive_points"
+    ],
+    "avoid": [],
+    "requirements": [
+      "reference_hydrology_field"
+    ]
+  },
+  "air_environment_impact": {
+    "must_cover": [
+      "gas_diffusion_mention_dominant_wind"
+    ],
+    "avoid": [
+      "provide_numerical_values"
+    ]
+  },
+  "noise_environment_impact": {
+    "must_cover": [
+      "brief_description"
+    ],
+    "avoid": [
+      "provide_decibel_values"
+    ]
+  },
+  "solid_waste_impact": {
+    "must_cover": [
+      "hazardous_waste_risk"
+    ],
+    "avoid": [],
+    "requirements": [
+      "reference_hazardous_waste_field"
+    ]
+  },
+  "risk_management_conclusion": {
+    "must_cover": [
+      "reference_hj941_2018"
+    ],
+    "avoid": [
+      "absolute_judgment_words"
+    ]
+  },
+  "long_term_plan": {
+    "must_cover": [
+      "continuous_improvement"
+    ],
+    "avoid": [
+      "commitment_engineering_projects"
+    ]
+  },
+  "medium_term_plan": {
+    "must_cover": [
+      "continuous_improvement"
+    ],
+    "avoid": [
+      "investment_plans"
+    ]
+  },
+  "short_term_plan": {
+    "must_cover": [
+      "specific_operable_actions"
+    ],
+    "avoid": [],
+    "requirements": [
+      "can_write_inspection_system_update"
+    ]
+  },
+  "environmental_work": {
+    "must_cover": [
+      "real_enterprise_work_situation"
+    ],
+    "avoid": [
+      "generic_content"
+    ]
+  },
+  "construction_layout": {
+    "must_cover": [
+      "layout_rationality"
+    ],
+    "avoid": [
+      "insufficient_drawings"
+    ]
+  },
+  "risk_prevention_measures": {
+    "must_cover": [
+      "measures_consistent_with_resources"
+    ],
+    "avoid": [],
+    "requirements": [
+      "mention_equipment_materials"
+    ]
+  },
+  "emergency_response_measures": {
+    "must_cover": [
+      "complete_process_response"
+    ],
+    "avoid": [],
+    "requirements": [
+      "follow_flow_structure"
+    ]
+  },
+  "investigation_process": {
+    "must_cover": [
+      "data_review",
+      "site_verification"
+    ],
+    "avoid": [
+      "specific_dates"
+    ]
+  },
+  "gap_analysis_1": {
+    "must_cover": [
+      "team_capability_gaps"
+    ],
+    "avoid": []
+  },
+  "gap_analysis_2": {
+    "must_cover": [
+      "equipment_gaps"
+    ],
+    "avoid": []
+  },
+  "gap_analysis_3": {
+    "must_cover": [
+      "training_gaps"
+    ],
+    "avoid": []
+  },
+  "gap_analysis_4": {
+    "must_cover": [
+      "drill_gaps"
+    ],
+    "avoid": []
+  },
+  "conclusion": {
+    "must_cover": [
+      "overall_evaluation",
+      "gaps",
+      "recommendations"
+    ],
+    "avoid": []
+  }
+}

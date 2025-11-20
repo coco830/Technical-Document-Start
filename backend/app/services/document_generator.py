@@ -16,6 +16,7 @@ import yaml
 # 导入AI Section相关模块
 from ..prompts.ai_sections_loader import ai_sections_loader
 from ..prompts.ai_section_processor import render_user_template, call_llm, postprocess_ai_output
+from .ai_compliance_checker import ai_compliance_checker
 
 # 配置日志
 logger = logging.getLogger(__name__)
@@ -940,7 +941,7 @@ class DocumentGenerator:
         # 返回对应的提示词，如果没有找到则返回通用提示词
         return prompts.get(section_name, f"请为'{enterprise_name}'生成'{section_name}'章节的内容，要求专业、准确、简洁。")
     
-    def build_ai_sections(self, enterprise_data: dict, user_id: Optional[str] = None, document_type: Optional[str] = None) -> dict:
+    def build_ai_sections(self, enterprise_data: dict, user_id: Optional[str] = None, document_type: Optional[str] = None, enable_compliance_check: bool = True, max_retries: int = 2) -> dict:
         """
         构建AI段落（使用配置文件）
         
@@ -948,6 +949,8 @@ class DocumentGenerator:
             enterprise_data: 整个企业数据
             user_id: 用户ID（用于使用量统计）
             document_type: 文档类型，可选，用于过滤特定文档的sections
+            enable_compliance_check: 是否启用合规检查
+            max_retries: 最大重试次数
             
         Returns:
             包含所有AI段落的字典
@@ -979,15 +982,42 @@ class DocumentGenerator:
                     # 渲染user template
                     user_prompt = render_user_template(user_template, enterprise_data)
                     
-                    # 调用LLM生成内容
-                    model = section_config.get("model", "xunfei_spark_v4")
-                    generated_content = call_llm(model, system_prompt, user_prompt, user_id)
+                    # 初始化重试计数器
+                    retry_count = 0
+                    processed_content = ""
+                    compliance_passed = False
                     
-                    # 后处理AI输出
-                    processed_content = postprocess_ai_output(generated_content)
+                    # 重试循环，直到通过合规检查或达到最大重试次数
+                    while retry_count < max_retries and not compliance_passed:
+                        retry_count += 1
+                        
+                        # 调用LLM生成内容
+                        model = section_config.get("model", "xunfei_spark_v4")
+                        generated_content = call_llm(model, system_prompt, user_prompt, user_id)
+                        
+                        # 后处理AI输出
+                        processed_content = postprocess_ai_output(generated_content)
+                        
+                        # 如果启用合规检查，则进行验证
+                        if enable_compliance_check:
+                            compliance_result = ai_compliance_checker.check_ai_output(section_key, processed_content)
+                            compliance_passed = compliance_result["passed"]
+                            
+                            if not compliance_passed:
+                                logger.warning(f"AI段落 {section_key} 第 {retry_count} 次生成未通过合规检查")
+                                logger.warning(f"合规问题: {compliance_result['issues']}")
+                                
+                                # 如果不是最后一次重试，调整system prompt加入合规要求
+                                if retry_count < max_retries:
+                                    system_prompt += f"\n\n请注意，上次生成的内容存在以下合规问题：{', '.join(compliance_result['issues'])}。请在本次生成中修正这些问题。"
+                            else:
+                                logger.info(f"AI段落 {section_key} 通过合规检查")
+                        else:
+                            # 如果不启用合规检查，直接通过
+                            compliance_passed = True
                     
                     ai_sections[section_key] = processed_content
-                    logger.info(f"成功生成AI段落: {section_key}")
+                    logger.info(f"成功生成AI段落: {section_key}, 重试次数: {retry_count}")
                     
                 except Exception as e:
                     logger.error(f"生成AI段落失败: {section_key}, 错误: {str(e)}")
@@ -1032,10 +1062,21 @@ class DocumentGenerator:
                 logger.error(f"企业数据验证失败: {errors}")
                 return result
             
-            # 生成所有AI段落
-            logger.info("开始生成AI段落...")
-            ai_sections = self.build_ai_sections(enterprise_data, user_id)
+            # 生成所有AI段落（启用合规检查）
+            logger.info("开始生成AI段落（启用合规检查）...")
+            ai_sections = self.build_ai_sections(enterprise_data, user_id, enable_compliance_check=True)
             result["ai_sections_used"] = list(ai_sections.keys())
+            
+            # 进行整体合规性检查
+            logger.info("进行整体合规性检查...")
+            compliance_results = ai_compliance_checker.check_multiple_sections(ai_sections)
+            result["compliance_results"] = compliance_results
+            
+            if not compliance_results["overall_passed"]:
+                logger.warning(f"部分AI段落未通过合规检查，总问题数: {compliance_results['total_issues']}")
+                result["warnings"] = [f"合规检查发现问题，总评分: {compliance_results['overall_score']}/100"]
+            else:
+                logger.info("所有AI段落通过合规检查")
             
             # 准备模板数据，合并AI段落
             template_data = self._prepare_template_data(enterprise_data)
@@ -1150,13 +1191,13 @@ class DocumentGenerator:
                 # 获取模板所需的AI段落
                 ai_sections_needed = self.get_template_ai_sections(template_id)
                 
-                # 生成特定文档类型的AI段落
-                logger.info(f"开始生成{document_type}的AI段落...")
+                # 生成特定文档类型的AI段落（启用合规检查）
+                logger.info(f"开始生成{document_type}的AI段落（启用合规检查）...")
                 ai_sections = {}
                 
                 if ai_sections_needed:
                     # 只生成需要的AI段落
-                    all_ai_sections = self.build_ai_sections(enterprise_data, user_id)
+                    all_ai_sections = self.build_ai_sections(enterprise_data, user_id, enable_compliance_check=True)
                     for section in ai_sections_needed:
                         if section in all_ai_sections:
                             ai_sections[section] = all_ai_sections[section]
