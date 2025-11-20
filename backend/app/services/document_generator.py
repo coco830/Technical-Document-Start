@@ -1056,7 +1056,11 @@ class DocumentGenerator:
                         if content is None:
                             result["errors"].append(f"{doc_info.get('output_name', doc_type)}生成失败")
                         else:
-                            result[doc_type] = content
+                            # 映射文档类型到结果键名
+                            if doc_type == "risk_assessment":
+                                result["risk_report"] = content
+                            else:
+                                result[doc_type] = content
                     else:
                         logger.warning(f"未找到{doc_type}的模板路径")
             else:

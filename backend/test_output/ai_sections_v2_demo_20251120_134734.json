@@ -1,0 +1,32 @@
+{
+  "ai_sections_used": [
+    "enterprise_overview",
+    "location_description",
+    "terrain_description",
+    "weather_description",
+    "hydrology_description",
+    "production_process_description",
+    "safety_management_description",
+    "water_environment_impact",
+    "air_environment_impact",
+    "noise_environment_impact",
+    "solid_waste_impact",
+    "risk_management_conclusion",
+    "long_term_plan",
+    "medium_term_plan",
+    "short_term_plan",
+    "environmental_work",
+    "construction_layout",
+    "risk_prevention_measures",
+    "emergency_response_measures",
+    "incident_response_card",
+    "investigation_process",
+    "gap_analysis_1",
+    "gap_analysis_2",
+    "gap_analysis_3",
+    "gap_analysis_4",
+    "conclusion"
+  ],
+  "generation_time": "2025-11-20T13:47:34.429418",
+  "document_count": 7
+}
