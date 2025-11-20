@@ -1,0 +1,171 @@
+{
+  "templates": {
+    "template_risk_plan_v2.jinja2.md": {
+      "id": "risk_assessment_v2",
+      "name": "环境风险评估报告（V2版）",
+      "description": "用于生成符合HJ941-2018标准的环境风险评估报告，包含AI生成的15个专业段落",
+      "category": "main_document",
+      "version": "2.0.0",
+      "template_path": "template_risk_plan_v2.jinja2.md",
+      "enabled": true,
+      "ai_sections": [
+        "enterprise_overview",
+        "location_description",
+        "terrain_description",
+        "weather_description",
+        "hydrology_description",
+        "production_process_description",
+        "safety_management_description",
+        "water_environment_impact",
+        "air_environment_impact",
+        "noise_environment_impact",
+        "solid_waste_impact",
+        "risk_management_conclusion",
+        "long_term_plan",
+        "medium_term_plan",
+        "short_term_plan"
+      ],
+      "required_fields": [
+        "basic_info",
+        "production_process",
+        "environment_info",
+        "compliance_info",
+        "emergency_resources"
+      ]
+    },
+    "template_emergency_plan_v2.jinja2.md": {
+      "id": "emergency_plan_v2",
+      "name": "突发环境事件应急预案（V2版）",
+      "description": "用于生成符合法规要求的突发环境事件应急预案，包含AI生成的5个专业段落",
+      "category": "main_document",
+      "version": "2.0.0",
+      "template_path": "template_emergency_plan_v2.jinja2.md",
+      "enabled": true,
+      "ai_sections": [
+        "environmental_work",
+        "construction_layout",
+        "risk_prevention_measures",
+        "emergency_response_measures",
+        "incident_response_card"
+      ],
+      "required_fields": [
+        "basic_info",
+        "production_process",
+        "environment_info",
+        "compliance_info",
+        "emergency_resources"
+      ]
+    },
+    "template_resource_investigation_v2.jinja2.md": {
+      "id": "resource_investigation_v2",
+      "name": "应急资源调查报告（V2版）",
+      "description": "用于生成应急资源调查报告，包含AI生成的6个专业段落",
+      "category": "main_document",
+      "version": "2.0.0",
+      "template_path": "template_resource_investigation_v2.jinja2.md",
+      "enabled": true,
+      "ai_sections": [
+        "investigation_process",
+        "gap_analysis_1",
+        "gap_analysis_2",
+        "gap_analysis_3",
+        "gap_analysis_4",
+        "conclusion"
+      ],
+      "required_fields": [
+        "basic_info",
+        "emergency_resources"
+      ]
+    },
+    "attachment_release_order_v2.jinja2.md": {
+      "id": "release_order_v2",
+      "name": "发布令（V2版）",
+      "description": "用于生成应急预案发布令",
+      "category": "attachment",
+      "version": "2.0.0",
+      "template_path": "attachments/attachment_release_order_v2.jinja2.md",
+      "enabled": true,
+      "ai_sections": [],
+      "required_fields": [
+        "basic_info"
+      ]
+    },
+    "attachment_opinion_adoption_v2.jinja2.md": {
+      "id": "opinion_adoption_v2",
+      "name": "意见采纳情况表（V2版）",
+      "description": "用于生成专家评审意见采纳情况表",
+      "category": "attachment",
+      "version": "2.0.0",
+      "template_path": "attachments/attachment_opinion_adoption_v2.jinja2.md",
+      "enabled": true,
+      "ai_sections": [],
+      "required_fields": [
+        "basic_info",
+        "compliance_info"
+      ]
+    },
+    "attachment_emergency_monitoring_plan_v2.jinja2.md": {
+      "id": "emergency_monitoring_plan_v2",
+      "name": "应急监测方案（V2版）",
+      "description": "用于生成突发环境事件应急监测方案",
+      "category": "attachment",
+      "version": "2.0.0",
+      "template_path": "attachments/attachment_emergency_monitoring_plan_v2.jinja2.md",
+      "enabled": true,
+      "ai_sections": [],
+      "required_fields": [
+        "basic_info",
+        "emergency_resources",
+        "environment_info"
+      ]
+    },
+    "attachment_revision_note_v2.jinja2.md": {
+      "id": "revision_note_v2",
+      "name": "修编说明（V2版）",
+      "description": "用于生成应急预案修编说明",
+      "category": "attachment",
+      "version": "2.0.0",
+      "template_path": "attachments/attachment_revision_note_v2.jinja2.md",
+      "enabled": true,
+      "ai_sections": [],
+      "required_fields": [
+        "basic_info",
+        "production_process",
+        "emergency_resources"
+      ]
+    }
+  },
+  "document_types": {
+    "risk_assessment": {
+      "template_id": "risk_assessment_v2",
+      "output_name": "环境风险评估报告"
+    },
+    "emergency_plan": {
+      "template_id": "emergency_plan_v2",
+      "output_name": "突发环境事件应急预案"
+    },
+    "resource_report": {
+      "template_id": "resource_investigation_v2",
+      "output_name": "应急资源调查报告"
+    },
+    "release_order": {
+      "template_id": "release_order_v2",
+      "output_name": "发布令"
+    },
+    "opinion_adoption": {
+      "template_id": "opinion_adoption_v2",
+      "output_name": "意见采纳情况表"
+    },
+    "emergency_monitoring_plan": {
+      "template_id": "emergency_monitoring_plan_v2",
+      "output_name": "应急监测方案"
+    },
+    "revision_note": {
+      "template_id": "revision_note_v2",
+      "output_name": "修编说明"
+    }
+  },
+  "version": "2.0.0",
+  "created_date": "2023-11-20",
+  "description": "V2版本模板注册表，支持7种文档类型的生成"
+}

@@ -2,7 +2,7 @@
 # 用于注册和管理所有可用的 AI 生成模板
 
 templates:
-  # 环保应急预案模板
+  # 环保应急预案模板（V1版本）
   - id: emergency_plan
     name: "突发环境事件应急预案"
     description: "用于生成符合 HJ941-2018 标准的环保应急预案"
@@ -14,7 +14,7 @@ templates:
     prompt_template_path: "templates/template_emergency_plan.jinja2"
 
     # 是否启用
-    enabled: true
+    enabled: false  # 已被V2版本替代
 
     # AI 模型配置
     ai_config:
@@ -31,7 +31,7 @@ templates:
     required_fields:
       - enterprise_info
 
-  # 环境风险评估报告模板
+  # 环境风险评估报告模板（V1版本）
   - id: risk_assessment
     name: "环境风险评估报告"
     description: "用于生成环境风险评估报告，分析企业环境风险"
@@ -43,7 +43,7 @@ templates:
     prompt_template_path: "templates/template_risk_plan.jinja2"
 
     # 是否启用
-    enabled: true
+    enabled: false  # 已被V2版本替代
 
     # AI 模型配置
     ai_config:
@@ -60,7 +60,7 @@ templates:
     required_fields:
       - enterprise_info
 
-  # 应急资源调查报告模板
+  # 应急资源调查报告模板（V1版本）
   - id: resource_investigation
     name: "应急资源调查报告"
     description: "用于生成应急资源调查报告，统计企业应急资源"
@@ -70,6 +70,35 @@ templates:
     # 模板文件路径
     schema_path: "templates/emergency_plan.json"
     prompt_template_path: "templates/template_resource_investigation.jinja2"
+
+    # 是否启用
+    enabled: false  # 已被V2版本替代
+
+    # AI 模型配置
+    ai_config:
+      model: "gpt-4"
+      temperature: 0.7
+      max_tokens: 2000
+
+    # 缓存配置
+    cache:
+      enabled: true
+      ttl: 3600
+
+    # 所需的必填字段
+    required_fields:
+      - enterprise_info
+
+  # 环境风险评估报告模板（V2版本）
+  - id: risk_assessment_v2
+    name: "环境风险评估报告（V2版）"
+    description: "用于生成符合HJ941-2018标准的环境风险评估报告，包含AI生成的15个专业段落"
+    category: "environmental"
+    version: "2.0.0"
+
+    # 模板文件路径
+    schema_path: "templates/emergency_plan.json"
+    prompt_template_path: "templates/template_risk_plan_v2.jinja2.md"
 
     # 是否启用
     enabled: true
@@ -87,7 +116,242 @@ templates:
 
     # 所需的必填字段
     required_fields:
-      - enterprise_info
+      - basic_info
+      - production_process
+      - environment_info
+      - compliance_info
+      - emergency_resources
+
+    # AI段落配置
+    ai_sections:
+      - enterprise_overview
+      - location_description
+      - terrain_description
+      - weather_description
+      - hydrology_description
+      - production_process_description
+      - safety_management_description
+      - water_environment_impact
+      - air_environment_impact
+      - noise_environment_impact
+      - solid_waste_impact
+      - risk_management_conclusion
+      - long_term_plan
+      - medium_term_plan
+      - short_term_plan
+
+  # 突发环境事件应急预案模板（V2版本）
+  - id: emergency_plan_v2
+    name: "突发环境事件应急预案（V2版）"
+    description: "用于生成符合法规要求的突发环境事件应急预案，包含AI生成的5个专业段落"
+    category: "environmental"
+    version: "2.0.0"
+
+    # 模板文件路径
+    schema_path: "templates/emergency_plan.json"
+    prompt_template_path: "templates/template_emergency_plan_v2.jinja2.md"
+
+    # 是否启用
+    enabled: true
+
+    # AI 模型配置
+    ai_config:
+      model: "gpt-4"
+      temperature: 0.7
+      max_tokens: 2000
+
+    # 缓存配置
+    cache:
+      enabled: true
+      ttl: 3600
+
+    # 所需的必填字段
+    required_fields:
+      - basic_info
+      - production_process
+      - environment_info
+      - compliance_info
+      - emergency_resources
+
+    # AI段落配置
+    ai_sections:
+      - environmental_work
+      - construction_layout
+      - risk_prevention_measures
+      - emergency_response_measures
+      - incident_response_card
+
+  # 应急资源调查报告模板（V2版本）
+  - id: resource_investigation_v2
+    name: "应急资源调查报告（V2版）"
+    description: "用于生成应急资源调查报告，包含AI生成的6个专业段落"
+    category: "environmental"
+    version: "2.0.0"
+
+    # 模板文件路径
+    schema_path: "templates/emergency_plan.json"
+    prompt_template_path: "templates/template_resource_investigation_v2.jinja2.md"
+
+    # 是否启用
+    enabled: true
+
+    # AI 模型配置
+    ai_config:
+      model: "gpt-4"
+      temperature: 0.7
+      max_tokens: 2000
+
+    # 缓存配置
+    cache:
+      enabled: true
+      ttl: 3600
+
+    # 所需的必填字段
+    required_fields:
+      - basic_info
+      - emergency_resources
+
+    # AI段落配置
+    ai_sections:
+      - investigation_process
+      - gap_analysis_1
+      - gap_analysis_2
+      - gap_analysis_3
+      - gap_analysis_4
+      - conclusion
+
+  # 发布令模板（V2版本）
+  - id: release_order_v2
+    name: "发布令（V2版）"
+    description: "用于生成应急预案发布令"
+    category: "attachment"
+    version: "2.0.0"
+
+    # 模板文件路径
+    schema_path: "templates/emergency_plan.json"
+    prompt_template_path: "templates/attachments/attachment_release_order_v2.jinja2.md"
+
+    # 是否启用
+    enabled: true
+
+    # AI 模型配置
+    ai_config:
+      model: "gpt-4"
+      temperature: 0.7
+      max_tokens: 2000
+
+    # 缓存配置
+    cache:
+      enabled: true
+      ttl: 3600
+
+    # 所需的必填字段
+    required_fields:
+      - basic_info
+
+    # AI段落配置
+    ai_sections: []
+
+  # 意见采纳情况表模板（V2版本）
+  - id: opinion_adoption_v2
+    name: "意见采纳情况表（V2版）"
+    description: "用于生成专家评审意见采纳情况表"
+    category: "attachment"
+    version: "2.0.0"
+
+    # 模板文件路径
+    schema_path: "templates/emergency_plan.json"
+    prompt_template_path: "templates/attachments/attachment_opinion_adoption_v2.jinja2.md"
+
+    # 是否启用
+    enabled: true
+
+    # AI 模型配置
+    ai_config:
+      model: "gpt-4"
+      temperature: 0.7
+      max_tokens: 2000
+
+    # 缓存配置
+    cache:
+      enabled: true
+      ttl: 3600
+
+    # 所需的必填字段
+    required_fields:
+      - basic_info
+      - compliance_info
+
+    # AI段落配置
+    ai_sections: []
+
+  # 应急监测方案模板（V2版本）
+  - id: emergency_monitoring_plan_v2
+    name: "应急监测方案（V2版）"
+    description: "用于生成突发环境事件应急监测方案"
+    category: "attachment"
+    version: "2.0.0"
+
+    # 模板文件路径
+    schema_path: "templates/emergency_plan.json"
+    prompt_template_path: "templates/attachments/attachment_emergency_monitoring_plan_v2.jinja2.md"
+
+    # 是否启用
+    enabled: true
+
+    # AI 模型配置
+    ai_config:
+      model: "gpt-4"
+      temperature: 0.7
+      max_tokens: 2000
+
+    # 缓存配置
+    cache:
+      enabled: true
+      ttl: 3600
+
+    # 所需的必填字段
+    required_fields:
+      - basic_info
+      - emergency_resources
+      - environment_info
+
+    # AI段落配置
+    ai_sections: []
+
+  # 修编说明模板（V2版本）
+  - id: revision_note_v2
+    name: "修编说明（V2版）"
+    description: "用于生成应急预案修编说明"
+    category: "attachment"
+    version: "2.0.0"
+
+    # 模板文件路径
+    schema_path: "templates/emergency_plan.json"
+    prompt_template_path: "templates/attachments/attachment_revision_note_v2.jinja2.md"
+
+    # 是否启用
+    enabled: true
+
+    # AI 模型配置
+    ai_config:
+      model: "gpt-4"
+      temperature: 0.7
+      max_tokens: 2000
+
+    # 缓存配置
+    cache:
+      enabled: true
+      ttl: 3600
+
+    # 所需的必填字段
+    required_fields:
+      - basic_info
+      - production_process
+      - emergency_resources
+
+    # AI段落配置
+    ai_sections: []
 
   # 环评报告模板（示例，未来扩展）
   - id: environmental_assessment

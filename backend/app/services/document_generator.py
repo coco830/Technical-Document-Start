@@ -11,6 +11,7 @@ from pathlib import Path
 from jinja2 import Environment, FileSystemLoader, select_autoescape, Template, TemplateNotFound, TemplateSyntaxError
 from jinja2.sandbox import SandboxedEnvironment
 import os
+import yaml
 
 # 导入AI Section相关模块
 from ..prompts.ai_sections_loader import ai_sections_loader
@@ -42,11 +43,98 @@ class DocumentGenerator:
         # 缓存已加载的模板
         self._template_cache: Dict[str, Template] = {}
         
+        # 加载模板注册表
+        self._load_template_registry()
+        
         logger.info(f"文档生成器初始化完成，模板目录: {self.templates_dir}")
     
     def _tojson_filter(self, value, indent=2):
         """JSON 序列化过滤器"""
         return json.dumps(value, ensure_ascii=False, indent=indent)
+    
+    def _load_template_registry(self):
+        """加载模板注册表"""
+        try:
+            # 获取当前文件所在目录的父目录
+            current_dir = Path(__file__).parent.parent
+            registry_path = current_dir / "prompts" / "template_registry_v2.json"
+            
+            if registry_path.exists():
+                with open(registry_path, 'r', encoding='utf-8') as f:
+                    self.template_registry = json.load(f)
+                logger.info(f"成功加载模板注册表: {registry_path}")
+            else:
+                logger.warning(f"模板注册表文件不存在: {registry_path}")
+                self.template_registry = {"templates": {}, "document_types": {}}
+        except Exception as e:
+            logger.error(f"加载模板注册表失败: {str(e)}")
+            self.template_registry = {"templates": {}, "document_types": {}}
+    
+    def get_template_info(self, template_id: str) -> Optional[Dict]:
+        """
+        获取模板信息
+        
+        Args:
+            template_id: 模板ID
+            
+        Returns:
+            模板信息字典，如果不存在返回None
+        """
+        for template_name, template_info in self.template_registry.get("templates", {}).items():
+            if template_info.get("id") == template_id:
+                return template_info
+        return None
+    
+    def get_document_type_info(self, document_type: str) -> Optional[Dict]:
+        """
+        获取文档类型信息
+        
+        Args:
+            document_type: 文档类型
+            
+        Returns:
+            文档类型信息字典，如果不存在返回None
+        """
+        return self.template_registry.get("document_types", {}).get(document_type)
+    
+    def get_all_document_types(self) -> Dict[str, Dict]:
+        """
+        获取所有文档类型
+        
+        Returns:
+            文档类型字典
+        """
+        return self.template_registry.get("document_types", {})
+    
+    def get_template_path(self, template_id: str) -> Optional[str]:
+        """
+        获取模板文件路径
+        
+        Args:
+            template_id: 模板ID
+            
+        Returns:
+            模板文件路径，如果不存在返回None
+        """
+        template_info = self.get_template_info(template_id)
+        if template_info:
+            return template_info.get("template_path")
+        return None
+    
+    def get_template_ai_sections(self, template_id: str) -> List[str]:
+        """
+        获取模板所需的AI段落列表
+        
+        Args:
+            template_id: 模板ID
+            
+        Returns:
+            AI段落列表
+        """
+        template_info = self.get_template_info(template_id)
+        if template_info:
+            return template_info.get("ai_sections", [])
+        return []
     
     def validate_enterprise_data(self, data: dict) -> Tuple[bool, List[str]]:
         """
@@ -911,21 +999,26 @@ class DocumentGenerator:
             logger.error(f"构建AI段落失败: {str(e)}")
             return {}
     
-    def generate_all_documents(self, enterprise_data: dict, user_id: Optional[str] = None) -> dict:
+    def generate_all_documents(self, enterprise_data: dict, user_id: Optional[str] = None, use_v2: bool = True) -> dict:
         """
-        生成所有三个文档（使用新架构）
+        生成所有文档（支持V2版本）
         
         Args:
             enterprise_data: 符合 emergency_plan.json 的企业数据
             user_id: 用户ID（用于使用量统计）
+            use_v2: 是否使用V2版本模板
             
         Returns:
-            包含三个文档渲染结果的字典
+            包含所有文档渲染结果的字典
         """
         result = {
             "risk_report": None,
             "emergency_plan": None,
             "resource_report": None,
+            "release_order": None,
+            "opinion_adoption": None,
+            "emergency_monitoring_plan": None,
+            "revision_note": None,
             "success": False,
             "errors": [],
             "ai_sections_used": []
@@ -948,34 +1041,55 @@ class DocumentGenerator:
             template_data = self._prepare_template_data(enterprise_data)
             template_data["ai_sections"] = ai_sections
             
-            # 渲染风险评估报告
-            logger.info("渲染风险评估报告...")
-            risk_report = self.render_jinja("template_risk_plan.jinja2", template_data)
-            if risk_report is None:
-                result["errors"].append("风险评估报告生成失败")
+            if use_v2:
+                # 使用V2版本模板
+                document_types = self.get_all_document_types()
+                
+                for doc_type, doc_info in document_types.items():
+                    template_id = doc_info.get("template_id")
+                    template_path = self.get_template_path(template_id)
+                    
+                    if template_path:
+                        logger.info(f"渲染{doc_info.get('output_name', doc_type)}...")
+                        content = self.render_jinja(template_path, template_data)
+                        
+                        if content is None:
+                            result["errors"].append(f"{doc_info.get('output_name', doc_type)}生成失败")
+                        else:
+                            result[doc_type] = content
+                    else:
+                        logger.warning(f"未找到{doc_type}的模板路径")
             else:
-                result["risk_report"] = risk_report
-            
-            # 渲染应急预案
-            logger.info("渲染应急预案...")
-            emergency_plan = self.render_jinja("template_emergency_plan.jinja2", template_data)
-            if emergency_plan is None:
-                result["errors"].append("应急预案生成失败")
-            else:
-                result["emergency_plan"] = emergency_plan
-            
-            # 渲染应急资源调查报告
-            logger.info("渲染应急资源调查报告...")
-            resource_report = self.render_jinja("template_resource_investigation.jinja2", template_data)
-            if resource_report is None:
-                result["errors"].append("应急资源调查报告生成失败")
-            else:
-                result["resource_report"] = resource_report
+                # 使用V1版本模板（保持向后兼容）
+                # 渲染风险评估报告
+                logger.info("渲染风险评估报告...")
+                risk_report = self.render_jinja("template_risk_plan.jinja2", template_data)
+                if risk_report is None:
+                    result["errors"].append("风险评估报告生成失败")
+                else:
+                    result["risk_report"] = risk_report
+                
+                # 渲染应急预案
+                logger.info("渲染应急预案...")
+                emergency_plan = self.render_jinja("template_emergency_plan.jinja2", template_data)
+                if emergency_plan is None:
+                    result["errors"].append("应急预案生成失败")
+                else:
+                    result["emergency_plan"] = emergency_plan
+                
+                # 渲染应急资源调查报告
+                logger.info("渲染应急资源调查报告...")
+                resource_report = self.render_jinja("template_resource_investigation.jinja2", template_data)
+                if resource_report is None:
+                    result["errors"].append("应急资源调查报告生成失败")
+                else:
+                    result["resource_report"] = resource_report
             
             # 检查是否所有文档都生成成功
-            if all([result["risk_report"], result["emergency_plan"], result["resource_report"]]):
+            main_docs = [result["risk_report"], result["emergency_plan"], result["resource_report"]]
+            if all(doc is not None for doc in main_docs):
                 result["success"] = True
-                logger.info("所有文档生成成功")
+                logger.info("主要文档生成成功")
             else:
                 logger.error(f"部分文档生成失败，错误: {result['errors']}")
             
@@ -987,14 +1101,15 @@ class DocumentGenerator:
             logger.error(error_msg)
             return result
     
-    def generate_single_document(self, document_type: str, enterprise_data: dict, user_id: Optional[str] = None) -> dict:
+    def generate_single_document(self, document_type: str, enterprise_data: dict, user_id: Optional[str] = None, use_v2: bool = True) -> dict:
         """
-        生成单个文档（使用新架构）
+        生成单个文档（支持V2版本）
         
         Args:
-            document_type: 文档类型 (risk_assessment/emergency_plan/resource_report)
+            document_type: 文档类型 (risk_assessment/emergency_plan/resource_report/release_order/opinion_adoption/emergency_monitoring_plan/revision_note)
             enterprise_data: 符合 emergency_plan.json 的企业数据
             user_id: 用户ID（用于使用量统计）
+            use_v2: 是否使用V2版本模板
             
         Returns:
             包含文档渲染结果的字典
@@ -1014,30 +1129,71 @@ class DocumentGenerator:
                 logger.error(f"企业数据验证失败: {errors}")
                 return result
             
-            # 生成特定文档类型的AI段落
-            logger.info(f"开始生成{document_type}的AI段落...")
-            ai_sections = self.build_ai_sections(enterprise_data, user_id, document_type)
-            result["ai_sections_used"] = list(ai_sections.keys())
+            if use_v2:
+                # 使用V2版本模板
+                doc_info = self.get_document_type_info(document_type)
+                if not doc_info:
+                    result["errors"].append(f"不支持的文档类型: {document_type}")
+                    return result
+                
+                template_id = doc_info.get("template_id")
+                template_path = self.get_template_path(template_id)
+                
+                if not template_path:
+                    result["errors"].append(f"未找到{document_type}的模板路径")
+                    return result
+                
+                # 获取模板所需的AI段落
+                ai_sections_needed = self.get_template_ai_sections(template_id)
+                
+                # 生成特定文档类型的AI段落
+                logger.info(f"开始生成{document_type}的AI段落...")
+                ai_sections = {}
+                
+                if ai_sections_needed:
+                    # 只生成需要的AI段落
+                    all_ai_sections = self.build_ai_sections(enterprise_data, user_id)
+                    for section in ai_sections_needed:
+                        if section in all_ai_sections:
+                            ai_sections[section] = all_ai_sections[section]
+                
+                result["ai_sections_used"] = list(ai_sections.keys())
+                
+                # 准备模板数据，合并AI段落
+                template_data = self._prepare_template_data(enterprise_data)
+                template_data["ai_sections"] = ai_sections
+                
+                # 渲染文档
+                logger.info(f"渲染{doc_info.get('output_name', document_type)}文档...")
+                content = self.render_jinja(template_path, template_data)
+                
+            else:
+                # 使用V1版本模板（保持向后兼容）
+                # 根据文档类型选择模板
+                template_map = {
+                    "risk_assessment": "template_risk_plan.jinja2",
+                    "emergency_plan": "template_emergency_plan.jinja2",
+                    "resource_report": "template_resource_investigation.jinja2"
+                }
+                
+                template_name = template_map.get(document_type)
+                if not template_name:
+                    result["errors"].append(f"不支持的文档类型: {document_type}")
+                    return result
+                
+                # 生成特定文档类型的AI段落
+                logger.info(f"开始生成{document_type}的AI段落...")
+                ai_sections = self.build_ai_sections(enterprise_data, user_id, document_type)
+                result["ai_sections_used"] = list(ai_sections.keys())
+                
+                # 准备模板数据，合并AI段落
+                template_data = self._prepare_template_data(enterprise_data)
+                template_data["ai_sections"] = ai_sections
+                
+                # 渲染文档
+                logger.info(f"渲染{document_type}文档...")
+                content = self.render_jinja(template_name, template_data)
             
-            # 准备模板数据，合并AI段落
-            template_data = self._prepare_template_data(enterprise_data)
-            template_data["ai_sections"] = ai_sections
-            
-            # 根据文档类型选择模板
-            template_map = {
-                "risk_assessment": "template_risk_plan.jinja2",
-                "emergency_plan": "template_emergency_plan.jinja2",
-                "resource_report": "template_resource_investigation.jinja2"
-            }
-            
-            template_name = template_map.get(document_type)
-            if not template_name:
-                result["errors"].append(f"不支持的文档类型: {document_type}")
-                return result
-            
-            # 渲染文档
-            logger.info(f"渲染{document_type}文档...")
-            content = self.render_jinja(template_name, template_data)
             if content is None:
                 result["errors"].append(f"{document_type}文档生成失败")
             else:
