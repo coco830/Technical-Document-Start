@@ -1,0 +1,392 @@
+{
+  "basic_info": {
+    "company_name": "示例化工有限公司",
+    "company_short_name": "示例化工",
+    "credit_code": "91110105MA01234567",
+    "industry_category": "化学原料和化学制品制造业",
+    "industry_subcategory": "专用化学产品制造",
+    "park_name": "北京化工产业园",
+    "risk_level": "较大",
+    "address": {
+      "province": "北京市",
+      "city": "北京市",
+      "district": "海淀区",
+      "detail": "科技园区创新路88号",
+      "longitude": 116.3074,
+      "latitude": 39.9042
+    },
+    "contacts": {
+      "legal_person": {
+        "name": "张建国",
+        "position": "法定代表人",
+        "mobile": "13800138001"
+      },
+      "environmental_manager": {
+        "name": "李明华",
+        "position": "环保负责人",
+        "mobile": "13900139001"
+      },
+      "emergency_contact": {
+        "name": "王志强",
+        "position": "应急联系人",
+        "mobile": "13700137001"
+      },
+      "office_phone": "010-88886666",
+      "email": "contact@example.com"
+    },
+    "operation": {
+      "established_date": "2018-03-15",
+      "production_status": "在产",
+      "employees_total": 120,
+      "employees_production": 95,
+      "work_shift": "三班倒",
+      "work_hours_per_shift": 8,
+      "operating_days_per_year": 330,
+      "land_area": 15000,
+      "building_area": 8000,
+      "investment_total": 50000000,
+      "investment_environmental": 8000000,
+      "company_intro": "示例化工有限公司是一家专业从事精细化工产品研发、生产和销售的高新技术企业，主要产品包括有机中间体、特种化学品等。公司拥有先进的生产设备和完善的环保设施，注重安全生产和环境保护。"
+    }
+  },
+  "production_process": {
+    "products": [
+      {
+        "product_name": "有机中间体A",
+        "product_type": "主产品",
+        "design_capacity": "2000吨/年",
+        "actual_output": "1800吨/年"
+      },
+      {
+        "product_name": "特种化学品B",
+        "product_type": "副产品",
+        "design_capacity": "500吨/年",
+        "actual_output": "450吨/年"
+      }
+    ],
+    "raw_materials": [
+      {
+        "name": "苯乙烯",
+        "cas_no": "100-42-5",
+        "material_category": "有机原料",
+        "is_hazardous": true,
+        "hazard_types": ["易燃", "有毒"],
+        "annual_usage": 1200,
+        "max_storage": 100,
+        "used_in_process": "反应工序",
+        "phase": "液体"
+      },
+      {
+        "name": "甲醇",
+        "cas_no": "67-56-1",
+        "material_category": "有机溶剂",
+        "is_hazardous": true,
+        "hazard_types": ["易燃", "有毒"],
+        "annual_usage": 800,
+        "max_storage": 50,
+        "used_in_process": "溶剂回收",
+        "phase": "液体"
+      }
+    ],
+    "energy": {
+      "water_consumption": 50000,
+      "electricity_consumption": 200000,
+      "natural_gas": 80000,
+      "other_energy": "蒸汽外购"
+    },
+    "process_description": "公司主要生产工艺包括原料预处理、化学反应、产品分离提纯、溶剂回收等工序。反应过程采用连续化生产，主要设备包括反应釜、蒸馏塔、冷凝器、储罐等。生产过程中严格控制温度、压力等工艺参数，确保产品质量和生产安全。",
+    "storage_units": [
+      {
+        "unit_name": "原料储罐区",
+        "facility_type": "储罐",
+        "stored_materials": ["苯乙烯", "甲醇"],
+        "capacity": 200,
+        "max_actual_storage": 150,
+        "location_desc": "厂区东北侧",
+        "anti_leak_measures": "防渗漏围堰、泄漏检测报警装置"
+      },
+      {
+        "unit_name": "产品储罐区",
+        "facility_type": "储罐",
+        "stored_materials": ["有机中间体A"],
+        "capacity": 100,
+        "max_actual_storage": 80,
+        "location_desc": "厂区西南侧",
+        "anti_leak_measures": "防渗漏围堰、液位监控装置"
+      }
+    ],
+    "hazardous_chemicals": [
+      {
+        "chemical_name": "苯乙烯",
+        "cas_no": "100-42-5",
+        "hazard_category": "易燃液体",
+        "max_storage": 100,
+        "phase": "液体",
+        "is_major_source": true
+      },
+      {
+        "chemical_name": "甲醇",
+        "cas_no": "67-56-1",
+        "hazard_category": "易燃液体",
+        "max_storage": 50,
+        "phase": "液体",
+        "is_major_source": false
+      }
+    ],
+    "hazardous_waste": [
+      {
+        "waste_name": "废有机溶剂",
+        "hw_category": "废有机溶剂",
+        "waste_code": "HW06",
+        "source_process": "溶剂回收工序",
+        "hazard_characteristics": ["易燃", "有毒"],
+        "max_storage": 10,
+        "storage_location": "危废暂存间",
+        "disposal_company": "北京危险废物处置中心"
+      },
+      {
+        "waste_name": "废活性炭",
+        "hw_category": "废有机溶剂",
+        "waste_code": "HW49",
+        "source_process": "废气处理工序",
+        "hazard_characteristics": ["有毒"],
+        "max_storage": 5,
+        "storage_location": "危废暂存间",
+        "disposal_company": "北京危险废物处置中心"
+      }
+    ]
+  },
+  "environment_info": {
+    "nearby_receivers": [
+      {
+        "receiver_type": "水环境",
+        "name": "清河",
+        "direction": "东",
+        "distance_m": 800,
+        "population_or_scale": "小型河流"
+      },
+      {
+        "receiver_type": "大气环境",
+        "name": "科技园住宅区",
+        "direction": "西",
+        "distance_m": 1200,
+        "population_or_scale": "5000人"
+      },
+      {
+        "receiver_type": "大气环境",
+        "name": "示范小学",
+        "direction": "南",
+        "distance_m": 1500,
+        "population_or_scale": "800人"
+      }
+    ],
+    "wastewater": {
+      "production_wastewater": true,
+      "domestic_wastewater": true,
+      "treatment_facilities": [
+        {
+          "facility_name": "污水处理站",
+          "process_type": "生化处理+物化处理",
+          "design_capacity": 100,
+          "actual_capacity": 80,
+          "discharge_destination": "市政污水管网"
+        }
+      ]
+    },
+    "waste_gas": {
+      "organized_sources": [
+        {
+          "source_name": "反应车间排气筒",
+          "main_pollutants": ["VOCs", "苯乙烯"],
+          "treatment_method": "活性炭吸附+催化燃烧",
+          "stack_height": 20
+        },
+        {
+          "source_name": "储罐区排气筒",
+          "main_pollutants": ["VOCs"],
+          "treatment_method": "冷凝回收+活性炭吸附",
+          "stack_height": 15
+        }
+      ],
+      "fugitive_sources_desc": "储罐、管道连接处、阀门等可能存在无组织排放"
+    },
+    "noise": [
+      {
+        "noise_source": "泵房",
+        "location": "厂区北侧",
+        "control_measures": "隔声罩、减振基础"
+      },
+      {
+        "noise_source": "冷却塔",
+        "location": "厂区南侧",
+        "control_measures": "消声器、隔声屏"
+      }
+    ],
+    "solid_waste": [
+      {
+        "waste_name": "包装材料",
+        "waste_type": "一般固废",
+        "annual_production": 20,
+        "storage_method": "分类存放",
+        "disposal_method": "回收利用"
+      },
+      {
+        "waste_name": "废催化剂",
+        "waste_type": "一般固废",
+        "annual_production": 5,
+        "storage_method": "专门存放区",
+        "disposal_method": "厂家回收"
+      }
+    ]
+  },
+  "compliance_info": {
+    "eia": {
+      "project_name": "示例化工有限公司精细化工产品生产项目",
+      "approval_document_no": "环审[2018]001号",
+      "approval_date": "2018-01-15",
+      "consistency_status": "一致"
+    },
+    "acceptance": {
+      "type": "竣工环境保护验收",
+      "document_no": "验[2019]025号",
+      "date": "2019-06-20"
+    },
+    "pollutant_permit": {
+      "permit_no": "排污许可证91110105MA01234567",
+      "authority": "北京市生态环境局",
+      "valid_from": "2020-01-01",
+      "valid_to": "2025-12-31",
+      "permitted_pollutants": ["COD", "氨氮", "VOCs", "苯乙烯", "NOx"]
+    },
+    "hazardous_waste_contracts": [
+      {
+        "company_name": "北京危险废物处置中心",
+        "permit_no": "危废经营许可证B110000001",
+        "contract_from": "2020-01-01",
+        "contract_to": "2025-12-31"
+      }
+    ]
+  },
+  "emergency_resources": {
+    "contact_list_internal": [
+      {
+        "role": "总指挥",
+        "name": "张建国",
+        "department": "总经理办公室",
+        "mobile": "13800138001"
+      },
+      {
+        "role": "副总指挥",
+        "name": "李明华",
+        "department": "环保部",
+        "mobile": "13900139001"
+      },
+      {
+        "role": "现场指挥",
+        "name": "王志强",
+        "department": "生产部",
+        "mobile": "13700137001"
+      },
+      {
+        "role": "技术支持",
+        "name": "赵工程师",
+        "department": "技术部",
+        "mobile": "13600136001"
+      }
+    ],
+    "contact_list_external": [
+      {
+        "unit_type": "消防部门",
+        "unit_name": "海淀区消防支队",
+        "phone": "119"
+      },
+      {
+        "unit_type": "环保部门",
+        "unit_name": "海淀区生态环境局",
+        "phone": "12369"
+      },
+      {
+        "unit_type": "安监部门",
+        "unit_name": "海淀区应急管理局",
+        "phone": "010-88881234"
+      },
+      {
+        "unit_type": "医疗部门",
+        "unit_name": "海淀区人民医院",
+        "phone": "010-88885678"
+      }
+    ],
+    "emergency_materials": [
+      {
+        "material_name": "干粉灭火器",
+        "unit": "个",
+        "quantity": 50,
+        "purpose": "初期火灾扑救",
+        "storage_location": "各车间、仓库",
+        "keeper": "安全管理员",
+        "keeper_phone": "13600136002"
+      },
+      {
+        "material_name": "泡沫灭火器",
+        "unit": "个",
+        "quantity": 20,
+        "purpose": "液体火灾扑救",
+        "storage_location": "储罐区、反应车间",
+        "keeper": "安全管理员",
+        "keeper_phone": "13600136002"
+      },
+      {
+        "material_name": "吸附棉",
+        "unit": "箱",
+        "quantity": 30,
+        "purpose": "化学品泄漏吸附",
+        "storage_location": "应急物资库",
+        "keeper": "仓库管理员",
+        "keeper_phone": "13500135002"
+      },
+      {
+        "material_name": "防毒面具",
+        "unit": "套",
+        "quantity": 40,
+        "purpose": "有毒气体防护",
+        "storage_location": "应急物资库",
+        "keeper": "仓库管理员",
+        "keeper_phone": "13500135002"
+      },
+      {
+        "material_name": "应急灯",
+        "unit": "个",
+        "quantity": 20,
+        "purpose": "应急照明",
+        "storage_location": "各车间、仓库",
+        "keeper": "电工",
+        "keeper_phone": "13400134002"
+      }
+    ],
+    "emergency_team": {
+      "has_internal_team": true,
+      "team_size": 25,
+      "team_structure": "总指挥、副总指挥、应急办公室、现场处置组、技术支持组、后勤保障组、医疗救护组"
+    },
+    "emergency_drills": [
+      {
+        "drill_date": "2023-05-20",
+        "drill_type": "综合应急演练",
+        "scenario": "苯乙烯泄漏事故",
+        "participants": "全体员工"
+      },
+      {
+        "drill_date": "2023-09-15",
+        "drill_type": "专项应急演练",
+        "scenario": "火灾事故",
+        "participants": "消防队员、现场操作人员"
+      },
+      {
+        "drill_date": "2023-11-10",
+        "drill_type": "桌面演练",
+        "scenario": "危废泄漏事故",
+        "participants": "管理人员、技术人员"
+      }
+    ]
+  }
+}
